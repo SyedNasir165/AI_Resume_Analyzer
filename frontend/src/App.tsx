@@ -9,6 +9,7 @@ import RegisterPage from './pages/RegisterPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import DashboardPage from './pages/DashboardPage'
+import UploadResumePage from './pages/UploadResumePage'
 
 function App() {
   return (
@@ -27,6 +28,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <DashboardPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/resumes/new"
+              element={
+                <ProtectedRoute>
+                  <UploadResumePage />
                 </ProtectedRoute>
               }
             />

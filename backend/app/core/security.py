@@ -37,6 +37,10 @@ def verify_access_token(token: str) -> TokenPayload:
             signing_key.key,
             algorithms=["ES256", "RS256"],
             audience="authenticated",
+            # Tolerate small clock differences between this server and Supabase's —
+            # without this, a token can fail "not valid yet" for a moment right after
+            # it's issued, since PyJWT checks nbf/iat with zero leeway by default.
+            leeway=10,
         )
     except jwt.PyJWTError as exc:
         raise HTTPException(

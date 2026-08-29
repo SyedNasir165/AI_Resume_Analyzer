@@ -12,8 +12,15 @@ Process rules: [`ProjectWorkflow.txt`](ProjectWorkflow.txt) · Condensed instruc
 
 ## Status
 
-**Phase 1 — Project scaffolding.** Frontend and backend skeletons exist and can talk to each
-other via a health check. No auth, upload, or analysis features yet.
+**Phase 3 — Resume upload.** Complete so far:
+- **Phase 1:** Project scaffolding — frontend/backend skeletons talking to each other via a health check.
+- **Phase 2:** Authentication — Supabase-backed registration, login, logout, password reset, and a
+  protected dashboard. The backend verifies Supabase-issued JWTs itself (via JWKS), independent of
+  the frontend.
+- **Phase 3:** Resume upload — PDF/DOCX/TXT file upload, drag-and-drop, and paste-text, with
+  extraction, validation, a review-before-confirm step, a resume list on the dashboard, and delete.
+
+No resume analysis yet — that's a later phase.
 
 ## Stack
 
@@ -44,10 +51,13 @@ python -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 copy .env.example .env
+alembic upgrade head
 uvicorn app.main:app --reload
 ```
 
-API runs at `http://localhost:8000` (docs at `/docs`, health check at `/health`).
+API runs at `http://localhost:8000` (docs at `/docs`, health check at `/health`). `alembic upgrade
+head` applies the database schema (profiles, resumes) to your Supabase Postgres — needed once
+after setting `DATABASE_URL`, and again after pulling any new migration.
 
 ### Frontend
 
@@ -62,5 +72,7 @@ App runs at `http://localhost:5175`.
 
 ### Environment variables
 
-Copy each `.env.example` to `.env` in `backend/` and `frontend/`. Supabase and Gemini keys are
-not required until later phases (auth and AI analysis) — Phase 1 runs without them.
+Copy each `.env.example` to `.env` in `backend/` and `frontend/`, then fill in your Supabase
+project's URL, keys, and database connection string (see `.env.example` comments for where to
+find each one in the Supabase dashboard, and the IPv6/session-pooler note for `DATABASE_URL`).
+Gemini's key isn't required yet — that's a later phase.

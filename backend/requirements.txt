@@ -12,3 +12,8 @@ alembic>=1.13.0,<2.0.0
 
 # Auth — verifying Supabase-issued JWTs
 pyjwt[crypto]>=2.9.0,<3.0.0
+
+# Resume upload — file parsing and multipart form handling
+python-multipart>=0.0.12,<1.0.0
+pdfplumber>=0.11.0,<1.0.0
+python-docx>=1.1.0,<2.0.0

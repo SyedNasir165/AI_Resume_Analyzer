@@ -34,11 +34,13 @@ Do not swap any of these without asking first — they were deliberately chosen 
    `commit`/`push` to the GitHub remote (`https://github.com/SyedNasir165/AI_Resume_Analyzer`)
    with a descriptive per-phase commit message. Review `git status` output before committing —
    stop and flag anything unexpected (secrets, stray files) rather than committing blindly.
-5. After implementing, report: Phase completed → What was implemented → Files changed → Testing
+5. Update `README.md`'s Status section (and anything else it says that's now stale) to reflect the
+   phase just completed, as part of that phase's commit — every phase, from Phase 2 onward.
+6. After implementing, report: Phase completed → What was implemented → Files changed → Testing
    performed and results → Known issues → Existing functionality preserved → confirmation that the
    commit was pushed.
-6. Stop and wait for approval before starting the next phase. Do not self-continue.
-7. State the next phase's goal before starting it.
+7. Stop and wait for approval before starting the next phase. Do not self-continue.
+8. State the next phase's goal before starting it.
 
 Dev ports: backend runs on 8000, frontend on 5175 (5173/5174 were already in use by unrelated
 projects on this machine — check before assuming a port is free).
