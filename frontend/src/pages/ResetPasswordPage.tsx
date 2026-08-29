@@ -1,15 +1,15 @@
 import { useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 
-export default function RegisterPage() {
-  const { signUp } = useAuth()
-  const [email, setEmail] = useState('')
+export default function ResetPasswordPage() {
+  const { updatePassword } = useAuth()
+  const navigate = useNavigate()
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
+  const [done, setDone] = useState(false)
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
@@ -26,28 +26,23 @@ export default function RegisterPage() {
     }
 
     setSubmitting(true)
-    const { error: signUpError } = await signUp(email, password)
+    const { error: updateError } = await updatePassword(password)
     setSubmitting(false)
 
-    if (signUpError) {
-      setError(signUpError)
+    if (updateError) {
+      setError(updateError)
       return
     }
 
-    setSubmitted(true)
+    setDone(true)
+    setTimeout(() => navigate('/dashboard'), 1500)
   }
 
-  if (submitted) {
+  if (done) {
     return (
       <div className="mx-auto flex max-w-sm flex-col items-center gap-4 px-4 py-24 text-center sm:px-6">
-        <h1 className="text-2xl font-semibold text-slate-900">Check your email</h1>
-        <p className="text-slate-600">
-          We sent a confirmation link to <span className="font-medium">{email}</span>. Click it to
-          activate your account, then come back and log in.
-        </p>
-        <Link to="/login" className="text-sm font-medium text-slate-900 underline underline-offset-4">
-          Back to log in
-        </Link>
+        <h1 className="text-2xl font-semibold text-slate-900">Password updated</h1>
+        <p className="text-slate-600">Taking you to your dashboard…</p>
       </div>
     )
   }
@@ -55,28 +50,17 @@ export default function RegisterPage() {
   return (
     <div className="mx-auto flex max-w-sm flex-col gap-6 px-4 py-24 sm:px-6">
       <div className="text-center">
-        <h1 className="text-2xl font-semibold text-slate-900">Create your account</h1>
+        <h1 className="text-2xl font-semibold text-slate-900">Set a new password</h1>
+        <p className="mt-1 text-sm text-slate-600">
+          Open this page from the reset link in your email — it signs you in just long enough to
+          set a new password.
+        </p>
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-slate-700">
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            required
-            autoComplete="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
-          />
-        </div>
-
-        <div>
           <label htmlFor="password" className="block text-sm font-medium text-slate-700">
-            Password
+            New password
           </label>
           <input
             id="password"
@@ -92,7 +76,7 @@ export default function RegisterPage() {
 
         <div>
           <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-700">
-            Confirm password
+            Confirm new password
           </label>
           <input
             id="confirmPassword"
@@ -116,16 +100,9 @@ export default function RegisterPage() {
           disabled={submitting}
           className="rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700 disabled:opacity-60"
         >
-          {submitting ? 'Creating account…' : 'Create account'}
+          {submitting ? 'Saving…' : 'Save new password'}
         </button>
       </form>
-
-      <p className="text-center text-sm text-slate-600">
-        Already have an account?{' '}
-        <Link to="/login" className="font-medium text-slate-900 underline underline-offset-4">
-          Log in
-        </Link>
-      </p>
     </div>
   )
 }

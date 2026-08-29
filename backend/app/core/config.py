@@ -6,9 +6,11 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     """Application configuration, loaded from environment variables / .env.
 
-    Supabase and Gemini fields are optional at this phase — they are declared here so the
-    full configuration surface is documented up front, but nothing in Phase 1 requires them
-    to be set. Later phases (auth, AI analysis) will start depending on them.
+    Gemini fields are still optional — a later phase depends on them. Supabase fields are
+    now required for the app to be useful: supabase_url is used to build the JWKS URL that
+    verifies login tokens (asymmetric keys, so no shared secret needed), database_url is the
+    Postgres connection, and supabase_service_role_key is reserved for a future phase that
+    needs Supabase's Auth Admin API (e.g. account deletion).
     """
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
@@ -17,9 +19,7 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:5175"
 
     supabase_url: str | None = None
-    supabase_anon_key: str | None = None
     supabase_service_role_key: str | None = None
-    supabase_jwt_secret: str | None = None
 
     database_url: str | None = None
 
