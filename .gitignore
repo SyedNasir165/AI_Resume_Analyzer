@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+backend/.venv/
+backend/**/__pycache__/
+*.egg-info/
+.pytest_cache/
+backend/.pytest_cache/
+
+# Env files (never commit real secrets)
+.env
+.env.local
+.env.*.local
+frontend/.env
+frontend/.env.local
+backend/.env
+
+# Build output
+dist/
+frontend/dist/
+build/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Coverage
+coverage/
+.coverage
+htmlcov/

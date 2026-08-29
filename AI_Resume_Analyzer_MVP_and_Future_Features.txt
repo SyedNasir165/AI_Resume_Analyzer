@@ -1,0 +1,1070 @@
+AI RESUME ANALYZER
+MVP FEATURES AND FUTURE FEATURES
+============================================================
+
+PROJECT GOAL
+------------------------------------------------------------
+Build a professional, public AI Resume Analyzer that users can
+access after deployment. The MVP must focus on accurate,
+transparent, evidence-based resume analysis and job-specific
+resume tailoring.
+
+IMPORTANT MVP RULE
+------------------------------------------------------------
+ONLY IMPLEMENT THE MVP FEATURES IN THIS DOCUMENT NOW.
+
+Do NOT implement the Future Features section during the MVP.
+
+Future features are documented only for the long-term roadmap.
+They must not be added, partially implemented, or used to expand
+the MVP scope unless explicitly requested later.
+
+CORE PRODUCT PRINCIPLE
+------------------------------------------------------------
+The system must never fabricate employers, job titles, dates,
+skills, achievements, metrics, education, certifications,
+responsibilities, or other candidate information.
+
+AI-generated suggestions must be based on:
+1. Information found in the uploaded resume.
+2. Information found in the selected job description.
+3. Facts explicitly confirmed by the user.
+
+The system must clearly distinguish between:
+- Strong evidence
+- Partial evidence
+- Missing evidence
+- User-confirmed information
+- AI suggestions requiring confirmation
+
+The application must NEVER claim that a resume is guaranteed
+to be accepted by a company's ATS or that a user is guaranteed
+to get an interview or job.
+
+Instead, it should provide an evidence-based ATS Alignment
+Score and clearly explain that the score is a heuristic estimate.
+
+============================================================
+MVP FEATURES
+============================================================
+
+1. PROFESSIONAL WEB APPLICATION
+------------------------------------------------------------
+Build a modern, professional, responsive web UI.
+
+Required:
+- Professional landing page.
+- Professional login page.
+- Registration/sign-up page.
+- Dashboard after login.
+- Clean navigation.
+- Responsive layout for desktop and mobile browsers.
+- Professional resume analysis dashboard.
+- Consistent typography, spacing, cards, buttons, and status
+  indicators.
+- Clear loading states while analysis is running.
+- Clear error messages.
+- Empty states for new users.
+
+The UI should feel like a real production product, not a basic
+student demo.
+
+------------------------------------------------------------
+2. USER AUTHENTICATION
+------------------------------------------------------------
+MVP authentication should include:
+- User registration.
+- Email/password login.
+- Logout.
+- Session management.
+- Password reset/recovery.
+- Protected dashboard.
+- Users can only access their own resumes and analyses.
+
+If Google authentication is simple to integrate without
+complicating the MVP, it may be added, but it is not required
+for the first MVP implementation.
+
+------------------------------------------------------------
+3. RESUME UPLOAD
+------------------------------------------------------------
+Users must be able to upload:
+- PDF
+- DOCX
+- TXT
+
+Upload methods:
+- File picker.
+- Drag-and-drop upload.
+- Resume text paste option.
+
+Validate:
+- File type.
+- File size.
+- Empty/invalid files.
+- Extraction failures.
+
+After upload:
+- Extract resume text.
+- Preserve important section and paragraph boundaries where
+  possible.
+- Detect extraction problems.
+- Show extracted text to the user.
+- Allow the user to confirm the extracted content before analysis.
+
+DO NOT implement image/JPG/PNG resume upload in the MVP.
+
+------------------------------------------------------------
+4. TWO ANALYSIS MODES
+------------------------------------------------------------
+
+A. GENERAL RESUME ANALYSIS
+
+The user can upload a resume without selecting a job role.
+
+The system analyzes:
+- Resume structure.
+- Grammar and spelling.
+- Professional language.
+- Section organization.
+- Weak bullets.
+- Repetition.
+- Filler words.
+- Passive language.
+- Summary quality.
+- Skills presentation.
+- Achievement strength.
+- Date consistency.
+- Contact information.
+- ATS parsing risks.
+- Overall resume quality.
+
+The user receives a Resume Quality Score.
+
+------------------------------------------------------------
+
+B. JOB-SPECIFIC RESUME ANALYSIS
+
+The user can select the role they are applying for.
+
+The UI should provide:
+- Searchable job-role selection.
+- Common roles/categories.
+- Ability to search for a role.
+- Selected role displayed before analysis.
+
+Examples:
+- Software Engineer
+- Frontend Developer
+- Backend Developer
+- Full Stack Developer
+- Data Analyst
+- Data Scientist
+- Machine Learning Engineer
+- AI Engineer
+- DevOps Engineer
+- Cloud Engineer
+- Cybersecurity Analyst
+- Product Manager
+- UI/UX Designer
+
+IMPORTANT:
+The role selection is only a context/filter.
+
+For accurate job-specific analysis, the user should also be
+able to provide the actual job description by:
+- Pasting the job description.
+- Uploading a job description file where supported.
+
+The actual job description should be the primary source for
+job-specific matching.
+
+------------------------------------------------------------
+5. JOB DESCRIPTION ANALYSIS
+------------------------------------------------------------
+For job-specific analysis, extract and organize:
+- Required qualifications.
+- Preferred qualifications.
+- Technical skills.
+- Soft skills.
+- Tools and technologies.
+- Responsibilities.
+- Industry/domain terms.
+- Seniority.
+- Years of experience.
+- Education requirements.
+- Certification requirements.
+- Important/repeated terms.
+
+Clearly separate:
+- Required
+- Preferred
+
+The user should be able to review the extracted requirements.
+
+------------------------------------------------------------
+6. RESUME STRUCTURE ANALYSIS
+------------------------------------------------------------
+Detect and classify:
+- Name/contact information.
+- Professional title.
+- Summary.
+- Experience.
+- Employer.
+- Job title.
+- Dates.
+- Education.
+- Skills.
+- Projects.
+- Certifications.
+- Awards.
+- Languages where present.
+
+Detect issues such as:
+- Missing sections.
+- Duplicate sections.
+- Inconsistent date formats.
+- Overlapping dates.
+- Inconsistent job titles.
+- Weak bullets.
+- Very long/short bullets.
+- Repetitive bullets.
+- Weak summary.
+- Skills without supporting evidence.
+                    RESUME
+                       ↓
+          ┌─────────────────────────┐
+          │ 1. STRUCTURE & QUALITY  │
+          │ Your 10 checks           │
+          └────────────┬────────────┘
+                       ↓
+          ┌─────────────────────────┐
+          │ 2. ATS PARSING SAFETY   │
+          └────────────┬────────────┘
+                       ↓
+          ┌─────────────────────────┐
+          │ 3. JOB REQUIREMENTS     │
+          │ Actual Job Description  │
+          └────────────┬────────────┘
+                       ↓
+          ┌─────────────────────────┐
+          │ 4. KEYWORD MATCHING     │
+          └────────────┬────────────┘
+                       ↓
+          ┌─────────────────────────┐
+          │ 5. EVIDENCE MATCHING    │
+          └────────────┬────────────┘
+                       ↓
+          ┌─────────────────────────┐
+          │ 6. EXPERIENCE STRENGTH  │
+          └────────────┬────────────┘
+                       ↓
+               ATS ALIGNMENT
+                  0–100
+
+------------------------------------------------------------
+7. ATS ALIGNMENT SCORE
+------------------------------------------------------------
+For job-specific analysis, provide an ATS Alignment Score
+from 0-100.
+
+The score must be transparent and explainable.
+
+Recommended categories:
+- Keyword coverage.
+- Requirement evidence/relevance.
+- ATS parsing safety.
+- Experience and achievement strength.
+- Resume structure and consistency.
+- Language clarity/professionalism.
+
+The score must:
+- Show category breakdown.
+- Explain why the score is good or bad.
+- Identify strongest areas.
+- Identify weakest areas.
+- Identify missing requirements.
+- Identify missing keywords.
+- Identify unsupported keywords.
+- Show top improvements.
+- Include confidence.
+- Clearly state that it is a heuristic and NOT a guarantee
+  of ATS acceptance.
+
+For general resume analysis, provide a Resume Quality Score
+instead of a job-specific ATS Alignment Score.
+
+------------------------------------------------------------
+8. ATS PARSING-SAFETY ANALYSIS
+------------------------------------------------------------
+Check for common ATS parsing risks:
+- Unusual section headings.
+- Columns.
+- Tables.
+- Text boxes.
+- Headers/footers.
+- Images/icons.
+- Unusual symbols.
+- Difficult formatting.
+- Contact information extraction.
+- Job title extraction.
+- Employer extraction.
+- Date extraction.
+- Section ordering.
+- Excessive design elements.
+- Plain-text readability.
+
+Show the user the plain-text representation where useful.
+
+Distinguish:
+- High-risk ATS problems.
+- Medium-risk problems.
+- Cosmetic preferences.
+
+------------------------------------------------------------
+9. REQUIREMENT-TO-EVIDENCE MATCHING
+------------------------------------------------------------
+For every important job requirement, show:
+
+- Requirement.
+- Required/preferred.
+- Matched/partially matched/missing.
+- Matching resume evidence.
+- Evidence strength.
+- Recommendation.
+- User question when evidence may exist but is not clearly
+  written.
+
+Evidence strength:
+0 = No evidence.
+1 = Weak/indirect evidence.
+2 = Relevant evidence but lacking detail/outcome.
+3 = Strong evidence with relevant skill, scope, and/or result.
+
+IMPORTANT:
+Clearly distinguish:
+- Missing keyword.
+- Missing requirement.
+- Missing evidence.
+
+Do not tell users to add unsupported skills simply because they
+appear in a job description.
+
+------------------------------------------------------------
+10. KEYWORD ANALYSIS
+------------------------------------------------------------
+Show:
+- Exact keyword matches.
+- Legitimate synonym matches.
+- Keyword coverage.
+- Keyword placement.
+- Important missing terms.
+- Keyword stuffing/repetition risks.
+- Unsupported keyword warnings.
+
+Show where important terms appear, such as:
+- Summary.
+- Skills.
+- Experience.
+- Projects.
+
+Never recommend adding a keyword when the resume does not
+support the underlying skill or experience.
+
+------------------------------------------------------------
+11. HIGHLIGHTED RESUME FINDINGS
+------------------------------------------------------------
+When a problem is detected, highlight the exact relevant
+resume line, sentence, or bullet.
+
+For each finding show:
+- Severity.
+- Exact resume location.
+- Original text.
+- Why it is a problem.
+- Why it matters.
+- Suggested improvement.
+- Facts used.
+- Facts requiring confirmation.
+- Whether it affects ATS, recruiter readability, or both.
+
+Example flow:
+
+Resume line:
+"Developed a website using React."
+
+Finding:
+Weak achievement evidence.
+
+Suggestion:
+Improve the bullet to describe verified scope, technology,
+responsibility, or outcome.
+
+If a metric is not present, ASK THE USER rather than inventing it.
+
+------------------------------------------------------------
+12. AI IMPROVEMENT COACH
+------------------------------------------------------------
+For weak resume bullets, ask targeted questions such as:
+- How many users/customers were affected?
+- What was the project scale?
+- Did the work reduce time/cost/errors?
+- What tools were used?
+- What was the measurable result?
+- Did you lead or coordinate people?
+- What was the deadline or complexity?
+
+After the user answers:
+- Generate an improved bullet.
+- Show which user answer was used.
+- Never invent numbers.
+- Never invent achievements.
+- Allow regenerate/edit/reject.
+
+------------------------------------------------------------
+13. EVIDENCE / TRUTH VERIFICATION
+------------------------------------------------------------
+Every AI-generated resume claim should be traceable.
+
+For each suggestion show:
+- Source from resume.
+- Source from job description where relevant.
+- User-confirmed facts.
+- Claims requiring confirmation.
+
+Example:
+
+Suggested bullet:
+"Improved processing time by 35%."
+
+Verification:
+- Technology: Verified.
+- Project: Verified.
+- 35% improvement: NOT VERIFIED.
+
+Status:
+NEEDS USER CONFIRMATION.
+
+The user must be able to confirm, edit, or remove the claim.
+
+------------------------------------------------------------
+14. TOP IMPROVEMENTS
+------------------------------------------------------------
+Instead of overwhelming the user with all findings,
+show a prioritized list such as:
+
+TOP 5 IMPROVEMENTS
+
+1. High-impact missing requirement.
+2. Weak experience bullet.
+3. Important ATS formatting issue.
+4. Missing evidence.
+5. Summary improvement.
+
+Each recommendation should explain why it is prioritized.
+
+------------------------------------------------------------
+15. JOB FIT SUMMARY
+------------------------------------------------------------
+For job-specific analysis provide a clear summary:
+
+- Overall alignment.
+- Strong matches.
+- Partial matches.
+- Missing requirements.
+- Main weaknesses.
+- Biggest opportunities for improvement.
+
+Example:
+
+Strong:
+- Python
+- Machine Learning
+- REST APIs
+
+Partial:
+- AWS
+
+Missing:
+- Kubernetes
+
+The system must never claim:
+"This resume will definitely be accepted."
+
+Instead say:
+"This resume shows strong/partial/weak alignment with the
+provided job description."
+
+------------------------------------------------------------
+16. RESUME HEALTH CHECK
+------------------------------------------------------------
+For general analysis, show categories such as:
+
+- Content quality.
+- Structure.
+- ATS safety.
+- Achievement strength.
+- Keyword quality when a job is provided.
+- Consistency.
+- Professional language.
+
+Use clear status indicators:
+- Strong.
+- Needs improvement.
+- Weak.
+
+------------------------------------------------------------
+17. BEFORE VS AFTER SCORE
+------------------------------------------------------------
+When the user approves changes:
+- Re-analyze the revised resume.
+- Recalculate the deterministic score.
+- Show before score.
+- Show after score.
+- Show the change.
+
+Example:
+
+Before: 67/100
+After: 84/100
+Improvement: +17
+
+The after score must be based on the actual revised resume,
+not an AI-generated estimate.
+
+------------------------------------------------------------
+18. APPROVAL-BASED RESUME EDITOR
+------------------------------------------------------------
+The user must control every change.
+
+Provide:
+- Original resume.
+- Suggested resume.
+- Before/after comparison.
+- Inline highlighted changes.
+- Accept.
+- Reject.
+- Edit.
+- Regenerate.
+- Undo.
+- Redo.
+
+Never automatically replace the user's original resume.
+
+------------------------------------------------------------
+19. FACT LOCKING
+------------------------------------------------------------
+Important verified facts should be protected from accidental
+AI modification.
+
+Examples:
+- Employer.
+- Job title.
+- Dates.
+- Degree.
+- Certification.
+- Confirmed skills.
+- Confirmed achievements.
+
+The AI cannot silently change locked facts.
+
+------------------------------------------------------------
+20. RESUME VERSION MANAGEMENT
+------------------------------------------------------------
+Allow:
+- Original/master resume.
+- Job-specific versions.
+- Version history.
+- Version names.
+- Revert to previous version.
+- Change history.
+
+The master resume must remain unchanged when creating a
+job-specific version.
+
+------------------------------------------------------------
+21. FINAL VALIDATION
+------------------------------------------------------------
+Before export, validate:
+
+- No employer was invented.
+- No job title was invented.
+- No dates changed unintentionally.
+- No degree was invented.
+- No unsupported skill was added.
+- No unsupported metric was added.
+- No duplicate bullet was created.
+- No contradiction exists.
+- Contact information is consistent.
+- Accepted claims have a source or user confirmation.
+- Job-specific terms are used naturally.
+- Formatting remains consistent.
+- Exported text remains extractable.
+
+------------------------------------------------------------
+22. EXPORT
+------------------------------------------------------------
+MVP exports:
+- DOCX.
+- PDF if reliable in the chosen stack.
+- Plain-text resume.
+- Downloadable analysis report.
+
+Exports must contain only approved/validated content.
+
+------------------------------------------------------------
+23. USER RESUME HISTORY
+------------------------------------------------------------
+Dashboard should show the user's previous resumes and analyses.
+
+For each:
+- Resume name.
+- Date analyzed.
+- Analysis type.
+- Score.
+- Target role/job when applicable.
+- View.
+- Continue editing.
+- Delete.
+
+Users must only see their own data.
+
+------------------------------------------------------------
+24. PRIVACY AND DATA CONTROL
+------------------------------------------------------------
+Privacy is a core MVP feature.
+
+Implement:
+- Private-by-default resumes.
+- Secure storage.
+- Delete resume.
+- Delete analysis.
+- Account/data deletion.
+- Data export where practical.
+- No resume text in application logs.
+- PII-safe logging.
+- Explicit consent for document storage.
+- Clear privacy notice.
+- Clear statement that AI-generated content must be verified.
+
+If technically feasible, provide a no-storage analysis option.
+
+------------------------------------------------------------
+25. SECURITY AND ABUSE PROTECTION
+------------------------------------------------------------
+Implement:
+- File validation.
+- File-size limits.
+- Rate limiting.
+- Abuse prevention.
+- Secure authentication.
+- Protected API endpoints.
+- Secure secrets/environment variables.
+- Prompt-injection protection.
+
+Uploaded resumes and job descriptions must be treated as
+untrusted content.
+
+Instructions found inside a resume or job description must
+NOT be treated as application commands.
+
+------------------------------------------------------------
+26. ERROR HANDLING
+------------------------------------------------------------
+The application must handle:
+- Invalid files.
+- Corrupted files.
+- Extraction failure.
+- AI API failure.
+- Invalid AI JSON.
+- Database failure.
+- Network failure.
+- Rate-limit errors.
+
+Never silently accept malformed AI output.
+
+Return useful user-friendly errors.
+
+------------------------------------------------------------
+27. DETERMINISTIC SCORING + AI
+------------------------------------------------------------
+Claude/LLM should NOT be the sole authority for the final
+numerical score.
+
+Use:
+- Application code for deterministic scoring.
+- AI for extraction, normalization, explanation, classification,
+  and suggestions.
+
+AI responses should use strict structured JSON schemas.
+Validate all AI responses before storing or displaying them.
+
+------------------------------------------------------------
+28. RESPONSIVE DEPLOYABLE WEB APPLICATION
+------------------------------------------------------------
+The MVP must be designed so it can be deployed publicly.
+
+Target architecture:
+
+Frontend:
+- Professional web frontend.
+
+Backend:
+- Resume processing.
+- AI integration.
+- Authentication.
+- Scoring.
+- Database/API.
+
+Database:
+- User data.
+- Resume metadata.
+- Resume versions.
+- Job analyses.
+- Suggestions.
+- Validation results.
+
+Deployment goal:
+- Use free-tier services where practical for development and
+  initial public deployment.
+
+IMPORTANT:
+AI API usage may not be completely free even when hosting has
+a free tier. Implement rate limits and usage protection.
+
+The MVP should be deployable as a real public web application.
+
+============================================================
+MVP USER FLOW
+============================================================
+
+NEW USER
+    ↓
+Landing Page
+    ↓
+Create Account / Login
+    ↓
+Dashboard
+    ↓
+Choose:
+    ├── General Resume Analysis
+    └── Job-Specific Analysis
+            ↓
+        Select/Search Role
+            ↓
+        Add Job Description
+    ↓
+Upload Resume
+    ↓
+Extract Resume
+    ↓
+User Confirms Extracted Content
+    ↓
+AI Analysis
+    ↓
+Score + Findings
+    ↓
+Highlighted Resume Problems
+    ↓
+Requirement-to-Evidence Map
+    ↓
+Top Improvements
+    ↓
+AI Improvement Coach
+    ↓
+User Approves/Rejects Changes
+    ↓
+Tailored Resume
+    ↓
+Final Validation
+    ↓
+Before/After Score
+    ↓
+Export Resume
+    ↓
+Save Version
+
+
+============================================================
+MVP DEFINITION OF DONE
+============================================================
+
+The MVP is complete when a user can:
+
+1. Create an account/login.
+2. Upload a PDF, DOCX, or TXT resume.
+3. Drag and drop a resume.
+4. Paste resume text.
+5. Confirm extracted resume content.
+6. Run general resume analysis.
+7. Receive a Resume Quality Score.
+8. Select/search a target role.
+9. Provide an actual job description.
+10. Receive job-specific ATS Alignment Score.
+11. See why the score is good or bad.
+12. See exact resume lines highlighted for problems.
+13. See actionable suggestions.
+14. See requirement-to-evidence matching.
+15. See missing/partial/strong requirements.
+16. See keyword analysis.
+17. Answer questions to improve weak bullets.
+18. Approve, reject, or edit AI suggestions.
+19. Create a tailored resume version.
+20. Run final validation.
+21. Compare before/after score.
+22. Export the approved resume.
+23. View resume/analysis history.
+24. Delete their data.
+25. Use the application securely and privately.
+
+============================================================
+IMPORTANT: DO NOT EXPAND MVP SCOPE
+============================================================
+
+Claude Code must implement ONLY the MVP features listed above.
+
+Do NOT implement future features during MVP.
+
+Do NOT add:
+- Extra social features.
+- Resume marketplace.
+- Complex job application tracking.
+- Automatic LinkedIn profile modification.
+- Unrequested AI agents.
+- Unrequested integrations.
+- Image resume/OCR support.
+- Mobile apps.
+- Advanced analytics.
+- Any feature not required for the MVP.
+
+If a future feature would be useful, document it separately
+but do not implement it now.
+
+============================================================
+FUTURE FEATURES — DO NOT IMPLEMENT NOW
+============================================================
+
+The following features are planned for future versions only.
+
+IMPORTANT:
+DO NOT IMPLEMENT THESE FEATURES IN THE MVP.
+
+------------------------------------------------------------
+FUTURE 1. MOBILE APPLICATION
+------------------------------------------------------------
+Build:
+- Android application.
+- iOS application.
+- Shared backend/API with the web application.
+- Mobile-specific resume upload.
+- Push notifications where appropriate.
+
+Recommended approach:
+- Reuse the existing backend/API.
+- Build the mobile client separately using a cross-platform
+  framework.
+
+DO NOT IMPLEMENT NOW.
+
+------------------------------------------------------------
+FUTURE 2. COVER LETTER GENERATOR
+------------------------------------------------------------
+Generate job-specific cover letters using only verified
+resume information and the actual job description.
+
+DO NOT IMPLEMENT NOW.
+
+------------------------------------------------------------
+FUTURE 3. LINKEDIN OPTIMIZATION
+------------------------------------------------------------
+Generate:
+- LinkedIn headline.
+- About section.
+- Skills suggestions.
+- Profile improvement suggestions.
+
+DO NOT implement automatic LinkedIn profile modification.
+
+DO NOT IMPLEMENT NOW.
+
+------------------------------------------------------------
+FUTURE 4. INTERVIEW PREPARATION
+------------------------------------------------------------
+Generate:
+- Job-specific interview questions.
+- Technical questions.
+- Behavioral questions.
+- Questions based on resume projects.
+
+DO NOT IMPLEMENT NOW.
+
+------------------------------------------------------------
+FUTURE 5. STAR ANSWER BUILDER
+------------------------------------------------------------
+Use confirmed experience to help users create:
+- Situation.
+- Task.
+- Action.
+- Result.
+
+DO NOT IMPLEMENT NOW.
+
+------------------------------------------------------------
+FUTURE 6. JOB APPLICATION TRACKER
+------------------------------------------------------------
+Track:
+- Company.
+- Role.
+- Application date.
+- Status.
+- Interview stage.
+- Notes.
+- Follow-up reminders.
+
+DO NOT IMPLEMENT NOW.
+
+------------------------------------------------------------
+FUTURE 7. MULTIPLE RESUME COMPARISON
+------------------------------------------------------------
+Compare multiple resume versions:
+
+- ATS Alignment Score.
+- Keyword coverage.
+- Evidence coverage.
+- ATS safety.
+- Structure.
+- Improvements.
+
+DO NOT IMPLEMENT NOW.
+
+------------------------------------------------------------
+FUTURE 8. ADVANCED RESUME ANALYTICS
+------------------------------------------------------------
+Provide long-term analytics such as:
+- Most common resume weaknesses.
+- Improvement history.
+- Score trends.
+- Job-specific performance trends.
+
+Only use aggregated/privacy-safe analytics.
+
+DO NOT IMPLEMENT NOW.
+
+------------------------------------------------------------
+FUTURE 9. IMAGE RESUME / OCR SUPPORT
+------------------------------------------------------------
+Support:
+- JPG.
+- PNG.
+- Scanned image resumes.
+- Advanced OCR.
+
+DO NOT IMPLEMENT NOW.
+
+------------------------------------------------------------
+FUTURE 10. RESUME TEMPLATE SYSTEM
+------------------------------------------------------------
+Provide professional resume templates and formatting options.
+
+Possible future categories:
+- ATS-safe.
+- Technical.
+- Graduate.
+- Experienced professional.
+- Executive.
+
+DO NOT build a large template marketplace initially.
+
+DO NOT IMPLEMENT NOW.
+
+------------------------------------------------------------
+FUTURE 11. JOB SEARCH INTEGRATION
+------------------------------------------------------------
+Potential future integration with job platforms/APIs to:
+- Search jobs.
+- Compare resume against jobs.
+- Analyze multiple job descriptions.
+- Save interesting jobs.
+
+DO NOT IMPLEMENT NOW.
+
+------------------------------------------------------------
+FUTURE 12. PERSONALIZED CAREER INSIGHTS
+------------------------------------------------------------
+Based on verified resume data:
+- Skill gap analysis.
+- Career direction suggestions.
+- Learning recommendations.
+- Role transition suggestions.
+
+DO NOT IMPLEMENT NOW.
+
+------------------------------------------------------------
+FUTURE 13. RESUME PERFORMANCE FEEDBACK
+------------------------------------------------------------
+If legally and technically appropriate, users could eventually
+track application outcomes and compare them against resume
+versions.
+
+Important:
+Never claim causation from limited user data.
+
+DO NOT IMPLEMENT NOW.
+
+------------------------------------------------------------
+FUTURE 14. TEAM / UNIVERSITY VERSION
+------------------------------------------------------------
+Possible future features:
+- University career-center dashboards.
+- Student resume reviews.
+- Recruiter/career-coach accounts.
+- Organization workspaces.
+
+DO NOT IMPLEMENT NOW.
+
+------------------------------------------------------------
+FUTURE 15. ADVANCED AI RESUME COACH
+------------------------------------------------------------
+A conversational AI coach that can continuously help users:
+- Improve resumes.
+- Prepare applications.
+- Prepare interviews.
+- Identify skill gaps.
+
+It must always use verified user information.
+
+DO NOT IMPLEMENT NOW.
+
+============================================================
+FINAL PRODUCT VISION
+============================================================
+
+The long-term product should become an evidence-based AI career
+assistant.
+
+But the MVP must remain focused on one core problem:
+
+"Help a user understand how strong their resume is, how well it
+aligns with a specific job, exactly what needs improvement, and
+how to safely create a better tailored resume."
+
+MVP CORE PROMISE
+------------------------------------------------------------
+"Upload your resume, optionally select a target role and provide
+the job description, and get a transparent, evidence-based
+analysis showing your strengths, weaknesses, ATS alignment,
+exact resume lines that need improvement, and safe suggestions
+you control."
+
+TRUST PRINCIPLE
+------------------------------------------------------------
+Never promise:
+"Your resume will definitely pass the ATS."
+
+Instead communicate:
+"Your ATS Alignment Score is a heuristic estimate based on
+the provided resume and job description. It does not guarantee
+ATS acceptance, interviews, or employment."
+
+END OF MVP + FUTURE FEATURE SPECIFICATION
+============================================================
