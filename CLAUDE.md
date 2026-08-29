@@ -29,14 +29,19 @@ Do not swap any of these without asking first — they were deliberately chosen 
 1. Inspect existing code/structure before changing anything. Preserve what already works.
 2. Implement only the current phase's scope. Don't jump ahead, don't refactor unrelated files.
 3. Write/edit actual project files directly — never hand the user a snippet to paste in.
-4. **Terminal commands (installs, `git init`/`add`/`commit`/`push`, running dev servers/tests) are
-   given to the user as exact commands to run themselves — Claude does not execute them.** State
-   which directory (`frontend/` or `backend/`) each command runs from, since it changes per phase.
+4. **Claude runs everything itself** (as of Phase 1, 2026-08-29): dependency installs, backend
+   pytest, frontend lint/build, starting dev servers to verify manually, and `git init`/`add`/
+   `commit`/`push` to the GitHub remote (`https://github.com/SyedNasir165/AI_Resume_Analyzer`)
+   with a descriptive per-phase commit message. Review `git status` output before committing —
+   stop and flag anything unexpected (secrets, stray files) rather than committing blindly.
 5. After implementing, report: Phase completed → What was implemented → Files changed → Testing
-   performed (and what the user needs to run/paste back, since Claude isn't executing it) → Known
-   issues → Existing functionality preserved.
+   performed and results → Known issues → Existing functionality preserved → confirmation that the
+   commit was pushed.
 6. Stop and wait for approval before starting the next phase. Do not self-continue.
-7. Once the user confirms the git push succeeded, state the next phase's goal before starting it.
+7. State the next phase's goal before starting it.
+
+Dev ports: backend runs on 8000, frontend on 5175 (5173/5174 were already in use by unrelated
+projects on this machine — check before assuming a port is free).
 
 ## Non-negotiable product rules
 
