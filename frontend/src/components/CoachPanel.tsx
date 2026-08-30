@@ -122,7 +122,7 @@ export default function CoachPanel({ bulletText, accepted, acceptedText, onAccep
                     <input
                       value={answers[q] ?? ''}
                       onChange={(event) => setAnswers((prev) => ({ ...prev, [q]: event.target.value }))}
-                      className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-slate-500 focus:outline-none"
+                      className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
                     />
                   </div>
                 ))}
@@ -131,7 +131,7 @@ export default function CoachPanel({ bulletText, accepted, acceptedText, onAccep
                 <button
                   onClick={() => void generate()}
                   disabled={loading}
-                  className="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-700 disabled:opacity-60"
+                  className="rounded-md bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
                 >
                   {loading ? 'Generating…' : 'Generate improved bullet'}
                 </button>
@@ -155,7 +155,7 @@ export default function CoachPanel({ bulletText, accepted, acceptedText, onAccep
                 value={editedBullet}
                 onChange={(event) => setEditedBullet(event.target.value)}
                 rows={3}
-                className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-slate-500 focus:outline-none"
+                className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
               />
               {rewrite.facts_used.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-1.5">

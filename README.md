@@ -12,7 +12,7 @@ Process rules: [`ProjectWorkflow.txt`](ProjectWorkflow.txt) · Condensed instruc
 
 ## Status
 
-**Phase 9 — Export completeness (PDF + analysis report).** Complete so far:
+**Phase 10 — Professional UI & final MVP items.** Complete so far:
 - **Phase 1:** Project scaffolding — frontend/backend skeletons talking to each other via a health check.
 - **Phase 2:** Authentication — Supabase-backed registration, login, logout, password reset, and a
   protected dashboard. The backend verifies Supabase-issued JWTs itself (via JWKS), independent of
@@ -48,6 +48,11 @@ Process rules: [`ProjectWorkflow.txt`](ProjectWorkflow.txt) · Condensed instruc
 - **Phase 9:** Export completeness — resume export now includes **PDF** (alongside DOCX and
   plain-text), and every analysis can be downloaded as a **report** (PDF or text) covering the
   score, category breakdown, job-fit, and findings.
+- **Phase 10:** Professional UI overhaul — a cohesive design system (Inter typography, an indigo
+  brand palette, polished cards, a circular score gauge), plus the two remaining spec items: a
+  **Resume Health Check** panel (Strong / Needs improvement / Weak per category) and an explicit
+  **fact-locking** note reassuring the user that employers, titles, dates, and education are never
+  altered by the AI.
 
 Both analyses are heuristic estimates, not guarantees of ATS acceptance or interviews. The full MVP
 flow is now in place: sign up, upload, analyze (general or job-specific), improve with the coach,

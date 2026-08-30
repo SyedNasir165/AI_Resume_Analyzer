@@ -133,166 +133,178 @@ export default function DashboardPage() {
     }
   }
 
+  const totalResumes = resumes.filter((r) => !r.parent_resume_id).length
+  const totalVersions = resumes.filter((r) => r.parent_resume_id).length
+
   return (
-    <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-slate-900">Dashboard</h1>
-        <button
-          onClick={() => void signOut()}
-          className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+    <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Your dashboard</h1>
+          <p className="mt-1 flex items-center gap-2 text-sm text-slate-500">
+            <span
+              className={`h-1.5 w-1.5 rounded-full ${
+                backendStatus === 'ok' ? 'bg-emerald-500' : backendStatus === 'error' ? 'bg-red-500' : 'bg-slate-300'
+              }`}
+            />
+            {session?.user.email ?? backendEmail}
+          </p>
+        </div>
+        <Link
+          to="/resumes/new"
+          className="rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-brand-700"
         >
-          Log out
-        </button>
+          + Upload resume
+        </Link>
       </div>
 
-      <div className="mt-8 rounded-lg border border-slate-200 bg-white p-6">
-        <p className="text-sm text-slate-500">Signed in as</p>
-        <p className="text-lg font-medium text-slate-900">{session?.user.email}</p>
-
-        <div className="mt-4 border-t border-slate-100 pt-4">
-          {backendStatus === 'loading' && <p className="text-sm text-slate-500">Checking backend session…</p>}
-          {backendStatus === 'ok' && (
-            <p className="text-sm text-emerald-700">
-              Backend verified your session for <span className="font-medium">{backendEmail}</span>.
-            </p>
-          )}
-          {backendStatus === 'error' && (
-            <p className="text-sm text-red-700">Could not verify your session with the backend.</p>
-          )}
+      {resumesStatus === 'ok' && resumes.length > 0 && (
+        <div className="mt-6 grid grid-cols-2 gap-4 sm:max-w-md">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <p className="text-2xl font-bold text-slate-900">{totalResumes}</p>
+            <p className="text-xs font-medium text-slate-500">Resume{totalResumes === 1 ? '' : 's'}</p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <p className="text-2xl font-bold text-slate-900">{totalVersions}</p>
+            <p className="text-xs font-medium text-slate-500">Tailored version{totalVersions === 1 ? '' : 's'}</p>
+          </div>
         </div>
-      </div>
+      )}
 
-      <div className="mt-8">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-slate-900">Your resumes</h2>
-          <Link
-            to="/resumes/new"
-            className="rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700"
-          >
-            Upload resume
-          </Link>
-        </div>
+      <h2 className="mt-10 text-sm font-semibold uppercase tracking-wide text-slate-400">Your resumes</h2>
 
-        <div className="mt-4">
-          {resumesStatus === 'loading' && <p className="text-sm text-slate-500">Loading your resumes…</p>}
-          {resumesStatus === 'error' && (
-            <p className="text-sm text-red-700">Could not load your resumes. Try refreshing the page.</p>
-          )}
-          {resumesStatus === 'ok' && resumes.length === 0 && (
-            <div className="rounded-lg border border-dashed border-slate-300 bg-white p-6 text-center text-sm text-slate-500">
-              You haven&apos;t uploaded a resume yet.
-            </div>
-          )}
-          {resumesStatus === 'ok' && resumes.length > 0 && (
-            <ul className="divide-y divide-slate-200 rounded-lg border border-slate-200 bg-white">
-              {orderWithVersions(resumes).map((resume) => (
+      <div className="mt-3">
+        {resumesStatus === 'loading' && <p className="text-sm text-slate-500">Loading your resumes…</p>}
+        {resumesStatus === 'error' && (
+          <p className="text-sm text-red-700">Could not load your resumes. Try refreshing the page.</p>
+        )}
+        {resumesStatus === 'ok' && resumes.length === 0 && (
+          <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center">
+            <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </span>
+            <p className="mt-3 text-sm font-medium text-slate-900">No resumes yet</p>
+            <p className="mt-1 text-sm text-slate-500">Upload a resume to run your first analysis.</p>
+            <Link
+              to="/resumes/new"
+              className="mt-4 inline-block rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700"
+            >
+              Upload resume
+            </Link>
+          </div>
+        )}
+        {resumesStatus === 'ok' && resumes.length > 0 && (
+          <ul className="space-y-2.5">
+            {orderWithVersions(resumes).map((resume) => {
+              const isVersion = Boolean(resume.parent_resume_id)
+              return (
                 <li
                   key={resume.id}
-                  className={`flex items-center justify-between gap-4 px-4 py-3 ${
-                    resume.parent_resume_id ? 'bg-slate-50 pl-8' : ''
+                  className={`rounded-2xl border bg-white p-4 shadow-sm transition-shadow hover:shadow-md ${
+                    isVersion ? 'ml-6 border-slate-200/80 border-l-2 border-l-brand-200' : 'border-slate-200'
                   }`}
                 >
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-slate-900">
-                      {resume.parent_resume_id && <span className="text-slate-400">↳ </span>}
-                      {resume.version_label ?? resume.original_filename ?? 'Pasted text'}
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      {formatDate(resume.created_at)} · {resume.file_type.toUpperCase()} ·{' '}
-                      {resume.parent_resume_id
-                        ? 'Tailored version'
-                        : resume.status === 'confirmed'
-                          ? 'Confirmed'
-                          : 'Pending confirmation'}
-                      {resume.warnings.length > 0 && ' · has warnings'}
-                    </p>
-                  </div>
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="flex items-center gap-2 truncate text-sm font-semibold text-slate-900">
+                        {resume.version_label ?? resume.original_filename ?? 'Pasted text'}
+                        {isVersion && (
+                          <span className="rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-medium text-brand-700">
+                            Tailored
+                          </span>
+                        )}
+                      </p>
+                      <p className="mt-0.5 text-xs text-slate-500">
+                        {formatDate(resume.created_at)} · {resume.file_type.toUpperCase()}
+                        {!isVersion && resume.status !== 'confirmed' && ' · Pending confirmation'}
+                        {resume.warnings.length > 0 && ' · has warnings'}
+                      </p>
+                    </div>
 
-                  {pendingDeleteId === resume.id ? (
-                    <div className="flex shrink-0 items-center gap-2">
-                      <span className="text-xs text-slate-600">Delete this resume?</span>
-                      <button
-                        onClick={() => void handleDelete(resume.id)}
-                        disabled={deletingId === resume.id}
-                        className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-60"
-                      >
-                        {deletingId === resume.id ? 'Deleting…' : 'Yes, delete'}
-                      </button>
-                      <button
-                        onClick={() => setPendingDeleteId(null)}
-                        className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="flex shrink-0 items-center gap-2">
-                      <button
-                        onClick={() => void handleAnalyze(resume.id)}
-                        disabled={analyzingId === resume.id}
-                        className="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-700 disabled:opacity-60"
-                      >
-                        {analyzingId === resume.id ? 'Analyzing…' : 'General analysis'}
-                      </button>
-                      <Link
-                        to={`/resumes/${resume.id}/analyze-job`}
-                        className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
-                      >
-                        Job match
-                      </Link>
-                      <Link
-                        to={`/resumes/${resume.id}/export`}
-                        className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
-                      >
-                        Export
-                      </Link>
-                      <button
-                        onClick={() => setPendingDeleteId(resume.id)}
-                        disabled={analyzingId === resume.id}
-                        className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-60"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  )}
+                    {pendingDeleteId === resume.id ? (
+                      <div className="flex shrink-0 items-center gap-2">
+                        <span className="text-xs text-slate-600">Delete this resume?</span>
+                        <button
+                          onClick={() => void handleDelete(resume.id)}
+                          disabled={deletingId === resume.id}
+                          className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-60"
+                        >
+                          {deletingId === resume.id ? 'Deleting…' : 'Yes, delete'}
+                        </button>
+                        <button
+                          onClick={() => setPendingDeleteId(null)}
+                          className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex shrink-0 flex-wrap items-center gap-2">
+                        <button
+                          onClick={() => void handleAnalyze(resume.id)}
+                          disabled={analyzingId === resume.id}
+                          className="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
+                        >
+                          {analyzingId === resume.id ? 'Analyzing…' : 'Analyze'}
+                        </button>
+                        <Link
+                          to={`/resumes/${resume.id}/analyze-job`}
+                          className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                        >
+                          Job match
+                        </Link>
+                        <Link
+                          to={`/resumes/${resume.id}/export`}
+                          className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                        >
+                          Export
+                        </Link>
+                        <button
+                          onClick={() => setPendingDeleteId(resume.id)}
+                          disabled={analyzingId === resume.id}
+                          className="rounded-lg px-2 py-1.5 text-xs font-medium text-slate-400 hover:bg-slate-100 hover:text-red-600 disabled:opacity-60"
+                          aria-label="Delete resume"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </li>
-              ))}
-            </ul>
-          )}
-          {analyzeError && (
-            <p role="alert" className="mt-3 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
-              {analyzeError}
-            </p>
-          )}
-        </div>
+              )
+            })}
+          </ul>
+        )}
+        {analyzeError && (
+          <p role="alert" className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+            {analyzeError}
+          </p>
+        )}
       </div>
 
-      <p className="mt-8 text-center text-xs text-slate-400">
-        General analysis reviews structure, language, ATS-safety, and achievement strength.
-        Job match compares your resume against a specific job description for an ATS Alignment Score.
-      </p>
-
-      <div className="mt-10 rounded-lg border border-red-200 bg-white p-6">
-        <h2 className="text-sm font-semibold text-red-800">Delete account</h2>
+      <div className="mt-12 rounded-2xl border border-red-200 bg-red-50/40 p-6">
+        <h2 className="text-sm font-semibold text-red-800">Danger zone</h2>
         <p className="mt-1 text-xs text-slate-600">
           Permanently deletes your account and all of your data — resumes, versions, and analyses.
           This cannot be undone.
         </p>
         {accountError && <p className="mt-2 text-xs text-red-700">{accountError}</p>}
         {confirmingAccountDelete ? (
-          <div className="mt-3 flex items-center gap-2">
-            <span className="text-xs text-slate-700">Are you sure? This is permanent.</span>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <span className="text-xs font-medium text-slate-700">Are you sure? This is permanent.</span>
             <button
               onClick={() => void handleDeleteAccount()}
               disabled={deletingAccount}
-              className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-60"
+              className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-60"
             >
               {deletingAccount ? 'Deleting…' : 'Yes, delete everything'}
             </button>
             <button
               onClick={() => setConfirmingAccountDelete(false)}
               disabled={deletingAccount}
-              className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
+              className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
             >
               Cancel
             </button>
@@ -300,7 +312,7 @@ export default function DashboardPage() {
         ) : (
           <button
             onClick={() => setConfirmingAccountDelete(true)}
-            className="mt-3 rounded-md border border-red-300 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50"
+            className="mt-3 rounded-lg border border-red-300 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50"
           >
             Delete my account
           </button>

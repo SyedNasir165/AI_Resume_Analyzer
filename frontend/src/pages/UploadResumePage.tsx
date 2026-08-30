@@ -109,7 +109,7 @@ export default function UploadResumePage() {
           value={editedText}
           onChange={(event) => setEditedText(event.target.value)}
           rows={16}
-          className="mt-4 w-full rounded-md border border-slate-300 px-3 py-2 font-mono text-sm focus:border-slate-500 focus:outline-none"
+          className="mt-4 w-full rounded-md border border-slate-300 px-3 py-2 font-mono text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
         />
 
         {error && (
@@ -122,7 +122,7 @@ export default function UploadResumePage() {
           <button
             onClick={() => void handleConfirm()}
             disabled={isConfirming || editedText.trim().length === 0}
-            className="rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700 disabled:opacity-60"
+            className="rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
           >
             {isConfirming ? 'Confirming…' : 'Confirm and save'}
           </button>
@@ -154,7 +154,7 @@ export default function UploadResumePage() {
         <button
           onClick={() => setMode('choose')}
           className={`rounded-md px-3 py-1.5 font-medium ${
-            mode === 'choose' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'
+            mode === 'choose' ? 'bg-brand-600 text-white' : 'text-slate-600 hover:bg-slate-100'
           }`}
         >
           Upload a file
@@ -162,7 +162,7 @@ export default function UploadResumePage() {
         <button
           onClick={() => setMode('paste')}
           className={`rounded-md px-3 py-1.5 font-medium ${
-            mode === 'paste' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'
+            mode === 'paste' ? 'bg-brand-600 text-white' : 'text-slate-600 hover:bg-slate-100'
           }`}
         >
           Paste text
@@ -188,7 +188,7 @@ export default function UploadResumePage() {
               <p className="text-sm text-slate-600">Drag and drop your resume here, or</p>
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="mt-3 rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700"
+                className="mt-3 rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700"
               >
                 Choose a file
               </button>
@@ -212,12 +212,12 @@ export default function UploadResumePage() {
             onChange={(event) => setPastedText(event.target.value)}
             rows={12}
             placeholder="Paste your resume text here…"
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
           />
           <button
             onClick={() => void handlePasteSubmit()}
             disabled={stage === 'processing' || pastedText.trim().length === 0}
-            className="mt-3 rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700 disabled:opacity-60"
+            className="mt-3 rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
           >
             {stage === 'processing' ? 'Processing…' : 'Continue'}
           </button>

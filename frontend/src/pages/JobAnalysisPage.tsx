@@ -77,7 +77,7 @@ export default function JobAnalysisPage() {
             value={targetRole}
             onChange={(event) => setTargetRole(event.target.value)}
             placeholder="Search or type a role…"
-            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
           />
           <datalist id="common-roles">
             {COMMON_ROLES.map((role) => (
@@ -96,7 +96,7 @@ export default function JobAnalysisPage() {
             onChange={(event) => setJobDescription(event.target.value)}
             rows={14}
             placeholder="Paste the full job description here…"
-            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
           />
         </div>
 
@@ -109,7 +109,7 @@ export default function JobAnalysisPage() {
         <button
           type="submit"
           disabled={submitting}
-          className="self-start rounded-md bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 disabled:opacity-60"
+          className="self-start rounded-md bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
         >
           {submitting ? 'Analyzing…' : 'Run job-specific analysis'}
         </button>

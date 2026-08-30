@@ -18,7 +18,7 @@ import PrivacyPage from './pages/PrivacyPage'
 function App() {
   return (
     <AuthProvider>
-      <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900">
+      <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900 antialiased">
         <Navbar />
         <main className="flex-1">
           <Routes>
