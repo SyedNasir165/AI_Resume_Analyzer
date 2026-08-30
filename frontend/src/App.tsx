@@ -12,6 +12,7 @@ import DashboardPage from './pages/DashboardPage'
 import UploadResumePage from './pages/UploadResumePage'
 import AnalysisResultsPage from './pages/AnalysisResultsPage'
 import JobAnalysisPage from './pages/JobAnalysisPage'
+import ExportPage from './pages/ExportPage'
 
 function App() {
   return (
@@ -46,6 +47,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <JobAnalysisPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/resumes/:resumeId/export"
+              element={
+                <ProtectedRoute>
+                  <ExportPage />
                 </ProtectedRoute>
               }
             />

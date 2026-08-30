@@ -12,7 +12,7 @@ Process rules: [`ProjectWorkflow.txt`](ProjectWorkflow.txt) · Condensed instruc
 
 ## Status
 
-**Phase 6 — AI Improvement Coach & tailored versions.** Complete so far:
+**Phase 7 — Final validation & export.** Complete so far:
 - **Phase 1:** Project scaffolding — frontend/backend skeletons talking to each other via a health check.
 - **Phase 2:** Authentication — Supabase-backed registration, login, logout, password reset, and a
   protected dashboard. The backend verifies Supabase-issued JWTs itself (via JWKS), independent of
@@ -34,9 +34,15 @@ Process rules: [`ProjectWorkflow.txt`](ProjectWorkflow.txt) · Condensed instruc
   confirmation). The user accepts, edits, or rejects each suggestion, then saves a **new tailored
   version** — the original is never modified. Analyzing a version shows a **before/after** score
   against its original.
+- **Phase 7:** Final validation & export — before exporting, a deterministic check compares a
+  tailored version against its original to confirm contact details and dates weren't dropped, flags
+  any *new* figures to confirm, and catches duplicate bullets. The approved resume then exports to
+  **plain-text** and **DOCX** (plain, ATS-friendly, text-extractable) — exports contain only the
+  text the user has approved, nothing generated.
 
-Both analyses are heuristic estimates, not guarantees of ATS acceptance or interviews. Remaining MVP
-work (final pre-export validation and export to DOCX/PDF/report) is in later phases.
+Both analyses are heuristic estimates, not guarantees of ATS acceptance or interviews. The core MVP
+flow — sign up, upload, analyze (general or job-specific), improve with the coach, save a tailored
+version, validate, and export — is now in place.
 
 ## Stack
 

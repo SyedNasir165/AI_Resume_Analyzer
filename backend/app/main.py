@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import analyses, coach, health, me, resumes
+from app.api import analyses, coach, finalize, health, me, resumes
 from app.core.config import get_settings
 
 settings = get_settings()
@@ -18,6 +18,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["Content-Disposition"],
 )
 
 app.include_router(health.router)
@@ -25,6 +26,7 @@ app.include_router(me.router)
 app.include_router(resumes.router)
 app.include_router(analyses.router)
 app.include_router(coach.router)
+app.include_router(finalize.router)
 
 
 @app.get("/")

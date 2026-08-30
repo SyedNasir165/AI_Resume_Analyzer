@@ -213,6 +213,12 @@ export default function DashboardPage() {
                       >
                         Job match
                       </Link>
+                      <Link
+                        to={`/resumes/${resume.id}/export`}
+                        className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
+                      >
+                        Export
+                      </Link>
                       <button
                         onClick={() => setPendingDeleteId(resume.id)}
                         disabled={analyzingId === resume.id}

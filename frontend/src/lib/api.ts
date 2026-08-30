@@ -217,6 +217,67 @@ export async function rewriteBullet(
   return response.json() as Promise<BulletRewrite>
 }
 
+export type ValidationStatus = 'pass' | 'warning'
+
+export interface ValidationCheck {
+  name: string
+  status: ValidationStatus
+  detail: string
+  items: string[]
+}
+
+export interface ValidationReport {
+  ok: boolean
+  checks: ValidationCheck[]
+}
+
+export async function validateResume(accessToken: string, resumeId: string): Promise<ValidationReport> {
+  const response = await fetch(`${API_BASE_URL}/api/resumes/${resumeId}/validate`, {
+    headers: authHeaders(accessToken),
+  })
+
+  if (!response.ok) {
+    throw new ApiError(await readErrorDetail(response))
+  }
+
+  return response.json() as Promise<ValidationReport>
+}
+
+function filenameFromDisposition(header: string | null, fallback: string): string {
+  if (!header) return fallback
+  const match = /filename="?([^"]+)"?/.exec(header)
+  return match ? match[1] : fallback
+}
+
+// Downloads must go through fetch (not a plain link) because the endpoint needs the auth header.
+export async function exportResume(
+  accessToken: string,
+  resumeId: string,
+  format: 'txt' | 'docx',
+): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/resumes/${resumeId}/export?format=${format}`, {
+    headers: authHeaders(accessToken),
+  })
+
+  if (!response.ok) {
+    throw new ApiError(await readErrorDetail(response))
+  }
+
+  const blob = await response.blob()
+  const filename = filenameFromDisposition(
+    response.headers.get('Content-Disposition'),
+    `resume.${format}`,
+  )
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  URL.revokeObjectURL(url)
+}
+
 export type Severity = 'high' | 'medium' | 'low'
 export type AffectedArea = 'ats' | 'recruiter' | 'both'
 
