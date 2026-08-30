@@ -83,11 +83,34 @@ def test_export_docx_is_valid_and_contains_text(client):
     assert "Built an API in 2021" in joined
 
 
-def test_export_rejects_unknown_format(client):
+def test_export_pdf_is_valid(client):
     _as_user(USER_A)
     resume_id = _create_resume(client)
 
     response = client.get(f"/api/resumes/{resume_id}/export?format=pdf")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/pdf"
+    assert response.content[:5] == b"%PDF-"  # valid PDF signature
+    assert "attachment" in response.headers["content-disposition"]
+
+
+def test_export_pdf_handles_unicode_punctuation(client):
+    _as_user(USER_A)
+    # Smart quotes / em dash must not break latin-1 PDF generation.
+    resume_id = _create_resume(client, text="Jane “Doe” — built an API\n")
+
+    response = client.get(f"/api/resumes/{resume_id}/export?format=pdf")
+
+    assert response.status_code == 200
+    assert response.content[:5] == b"%PDF-"
+
+
+def test_export_rejects_unknown_format(client):
+    _as_user(USER_A)
+    resume_id = _create_resume(client)
+
+    response = client.get(f"/api/resumes/{resume_id}/export?format=rtf")
 
     assert response.status_code == 422  # fails the query pattern
 

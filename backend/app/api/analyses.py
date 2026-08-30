@@ -1,7 +1,7 @@
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -11,7 +11,9 @@ from app.db.session import get_db
 from app.models.analysis import Analysis, AnalysisType
 from app.models.resume import Resume
 from app.schemas.analysis import AnalysisResult, JobAnalysisRequest
+from app.services.export import safe_filename, to_pdf_bytes, to_txt_bytes
 from app.services.gemini import GeminiError, analyze_resume_general, analyze_resume_job
+from app.services.report import build_report_text
 from app.services.scoring import score_general_analysis, score_job_analysis
 
 router = APIRouter(prefix="/api", tags=["analyses"])
@@ -153,6 +155,35 @@ def get_analysis(
     if analysis is None or str(analysis.user_id) != current_user.user_id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Analysis not found")
     return _to_result(analysis, db)
+
+
+@router.get("/analyses/{analysis_id}/report")
+def download_analysis_report(
+    analysis_id: uuid.UUID,
+    current_user: Annotated[TokenPayload, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+    format: Annotated[str, Query(pattern="^(txt|pdf)$")] = "txt",
+) -> Response:
+    analysis = db.get(Analysis, analysis_id)
+    if analysis is None or str(analysis.user_id) != current_user.user_id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Analysis not found")
+
+    report_text = build_report_text(analysis)
+
+    if format == "pdf":
+        content = to_pdf_bytes(report_text)
+        media_type = "application/pdf"
+        filename = safe_filename("analysis-report", "pdf")
+    else:
+        content = to_txt_bytes(report_text)
+        media_type = "text/plain; charset=utf-8"
+        filename = safe_filename("analysis-report", "txt")
+
+    return Response(
+        content=content,
+        media_type=media_type,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @router.delete("/analyses/{analysis_id}", status_code=status.HTTP_204_NO_CONTENT)

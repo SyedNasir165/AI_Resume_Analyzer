@@ -277,6 +277,47 @@ def test_original_analysis_has_no_previous_score(client, monkeypatch):
     assert result["previous_score"] is None
 
 
+def test_download_report_txt(client, monkeypatch):
+    monkeypatch.setattr(analyses_api, "analyze_resume_general", lambda _text: _canned_observations())
+    _as_user(USER_A)
+    resume_id = _create_resume(client)
+    analysis_id = client.post(f"/api/resumes/{resume_id}/analyze").json()["id"]
+
+    response = client.get(f"/api/analyses/{analysis_id}/report?format=txt")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/plain")
+    body = response.content.decode("utf-8")
+    assert "Resume Quality Report" in body
+    assert "Overall score:" in body
+    assert "heuristic estimate" in body
+
+
+def test_download_report_pdf(client, monkeypatch):
+    monkeypatch.setattr(analyses_api, "analyze_resume_job", lambda _r, _j: _canned_job_observations())
+    _as_user(USER_A)
+    resume_id = _create_resume(client)
+    analysis_id = client.post(f"/api/resumes/{resume_id}/analyze-job", json=JOB_BODY).json()["id"]
+
+    response = client.get(f"/api/analyses/{analysis_id}/report?format=pdf")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/pdf"
+    assert response.content[:5] == b"%PDF-"
+
+
+def test_cannot_download_another_users_report(client, monkeypatch):
+    monkeypatch.setattr(analyses_api, "analyze_resume_general", lambda _text: _canned_observations())
+    _as_user(USER_A)
+    resume_id = _create_resume(client)
+    analysis_id = client.post(f"/api/resumes/{resume_id}/analyze").json()["id"]
+
+    _as_user(USER_B)
+    response = client.get(f"/api/analyses/{analysis_id}/report?format=txt")
+
+    assert response.status_code == 404
+
+
 def test_delete_analysis(client, monkeypatch):
     monkeypatch.setattr(analyses_api, "analyze_resume_general", lambda _text: _canned_observations())
     _as_user(USER_A)

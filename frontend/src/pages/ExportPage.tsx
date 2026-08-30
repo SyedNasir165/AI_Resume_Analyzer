@@ -40,7 +40,7 @@ export default function ExportPage() {
   const [status, setStatus] = useState<LoadStatus>('loading')
   const [report, setReport] = useState<ValidationReport | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [downloading, setDownloading] = useState<'txt' | 'docx' | null>(null)
+  const [downloading, setDownloading] = useState<'txt' | 'docx' | 'pdf' | null>(null)
   const [downloadError, setDownloadError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -67,7 +67,7 @@ export default function ExportPage() {
     }
   }, [session, resumeId])
 
-  async function handleDownload(format: 'txt' | 'docx') {
+  async function handleDownload(format: 'txt' | 'docx' | 'pdf') {
     if (!session || !resumeId) return
     setDownloadError(null)
     setDownloading(format)
@@ -130,6 +130,13 @@ export default function ExportPage() {
               className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-60"
             >
               {downloading === 'docx' ? 'Preparing…' : 'Download .docx'}
+            </button>
+            <button
+              onClick={() => void handleDownload('pdf')}
+              disabled={downloading !== null}
+              className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-60"
+            >
+              {downloading === 'pdf' ? 'Preparing…' : 'Download .pdf'}
             </button>
           </div>
           {downloadError && <p className="mt-3 text-sm text-red-700">{downloadError}</p>}

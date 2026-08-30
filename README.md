@@ -12,7 +12,7 @@ Process rules: [`ProjectWorkflow.txt`](ProjectWorkflow.txt) · Condensed instruc
 
 ## Status
 
-**Phase 8 — Privacy & security.** Complete so far:
+**Phase 9 — Export completeness (PDF + analysis report).** Complete so far:
 - **Phase 1:** Project scaffolding — frontend/backend skeletons talking to each other via a health check.
 - **Phase 2:** Authentication — Supabase-backed registration, login, logout, password reset, and a
   protected dashboard. The backend verifies Supabase-issued JWTs itself (via JWKS), independent of
@@ -45,10 +45,14 @@ Process rules: [`ProjectWorkflow.txt`](ProjectWorkflow.txt) · Condensed instruc
   limiting** on the AI endpoints (analysis + coach) to protect against abuse and runaway API cost,
   plus a **privacy notice** explaining what's stored, how the resume is analyzed, and the user's
   controls.
+- **Phase 9:** Export completeness — resume export now includes **PDF** (alongside DOCX and
+  plain-text), and every analysis can be downloaded as a **report** (PDF or text) covering the
+  score, category breakdown, job-fit, and findings.
 
-Both analyses are heuristic estimates, not guarantees of ATS acceptance or interviews. The core MVP
-flow — sign up, upload, analyze (general or job-specific), improve with the coach, save a tailored
-version, validate, export, and manage/delete your data — is now in place.
+Both analyses are heuristic estimates, not guarantees of ATS acceptance or interviews. The full MVP
+flow is now in place: sign up, upload, analyze (general or job-specific), improve with the coach,
+save a tailored version, validate, export the resume (TXT/DOCX/PDF) and analysis report, and
+manage or delete your data.
 
 ## Stack
 

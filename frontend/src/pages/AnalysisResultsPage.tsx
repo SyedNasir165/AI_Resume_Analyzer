@@ -6,6 +6,7 @@ import {
   ApiError,
   createResumeVersion,
   deleteAnalysis,
+  downloadAnalysisReport,
   getAnalysis,
   getResume,
   type AnalysisResult,
@@ -235,6 +236,19 @@ export default function AnalysisResultsPage() {
   }
 
   const [deletingAnalysis, setDeletingAnalysis] = useState(false)
+  const [downloadingReport, setDownloadingReport] = useState<'txt' | 'pdf' | null>(null)
+
+  async function handleDownloadReport(format: 'txt' | 'pdf') {
+    if (!session || !analysis) return
+    setDownloadingReport(format)
+    try {
+      await downloadAnalysisReport(session.access_token, analysis.id, format)
+    } catch {
+      // best-effort download; ignore
+    } finally {
+      setDownloadingReport(null)
+    }
+  }
 
   async function handleDeleteAnalysis() {
     if (!session || !analysis) return
@@ -344,6 +358,24 @@ export default function AnalysisResultsPage() {
             ? 'This is a heuristic estimate of alignment with the provided job description per this analyzer’s model. A high score means strong alignment — not a guarantee of ATS acceptance, interviews, or employment. Always review AI-generated suggestions before using them.'
             : 'This is a heuristic estimate of resume quality based on this analyzer’s model. It is not a guarantee of ATS acceptance, interviews, or employment. Always review AI-generated suggestions before using them.'}
         </p>
+      </div>
+
+      <div className="mt-3 flex items-center gap-3 text-xs">
+        <span className="text-slate-400">Download report:</span>
+        <button
+          onClick={() => void handleDownloadReport('pdf')}
+          disabled={downloadingReport !== null}
+          className="font-medium text-slate-600 underline underline-offset-2 hover:text-slate-900 disabled:opacity-60"
+        >
+          {downloadingReport === 'pdf' ? 'Preparing…' : 'PDF'}
+        </button>
+        <button
+          onClick={() => void handleDownloadReport('txt')}
+          disabled={downloadingReport !== null}
+          className="font-medium text-slate-600 underline underline-offset-2 hover:text-slate-900 disabled:opacity-60"
+        >
+          {downloadingReport === 'txt' ? 'Preparing…' : 'Text'}
+        </button>
       </div>
 
       {isJob && <JobFitSection analysis={analysis} />}

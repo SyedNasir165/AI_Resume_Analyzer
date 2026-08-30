@@ -9,7 +9,7 @@ from app.core.security import TokenPayload
 from app.db.session import get_db
 from app.models.resume import Resume
 from app.schemas.validation import ValidationReport
-from app.services.export import safe_filename, to_docx_bytes, to_txt_bytes
+from app.services.export import safe_filename, to_docx_bytes, to_pdf_bytes, to_txt_bytes
 from app.services.validation import validate_resume
 
 router = APIRouter(prefix="/api/resumes", tags=["finalize"])
@@ -47,7 +47,7 @@ def export_resume(
     resume_id: uuid.UUID,
     current_user: Annotated[TokenPayload, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
-    format: Annotated[str, Query(pattern="^(txt|docx)$")] = "txt",
+    format: Annotated[str, Query(pattern="^(txt|docx|pdf)$")] = "txt",
 ) -> Response:
     resume = _get_owned_resume(db, resume_id, current_user.user_id)
 
@@ -57,6 +57,10 @@ def export_resume(
         content = to_docx_bytes(resume.extracted_text)
         media_type = DOCX_MEDIA_TYPE
         filename = safe_filename(name, "docx")
+    elif format == "pdf":
+        content = to_pdf_bytes(resume.extracted_text)
+        media_type = "application/pdf"
+        filename = safe_filename(name, "pdf")
     else:
         content = to_txt_bytes(resume.extracted_text)
         media_type = "text/plain; charset=utf-8"

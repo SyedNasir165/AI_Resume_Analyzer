@@ -250,24 +250,15 @@ function filenameFromDisposition(header: string | null, fallback: string): strin
 }
 
 // Downloads must go through fetch (not a plain link) because the endpoint needs the auth header.
-export async function exportResume(
-  accessToken: string,
-  resumeId: string,
-  format: 'txt' | 'docx',
-): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/api/resumes/${resumeId}/export?format=${format}`, {
-    headers: authHeaders(accessToken),
-  })
+async function downloadFromEndpoint(accessToken: string, path: string, fallbackName: string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}${path}`, { headers: authHeaders(accessToken) })
 
   if (!response.ok) {
     throw new ApiError(await readErrorDetail(response))
   }
 
   const blob = await response.blob()
-  const filename = filenameFromDisposition(
-    response.headers.get('Content-Disposition'),
-    `resume.${format}`,
-  )
+  const filename = filenameFromDisposition(response.headers.get('Content-Disposition'), fallbackName)
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
@@ -276,6 +267,26 @@ export async function exportResume(
   link.click()
   link.remove()
   URL.revokeObjectURL(url)
+}
+
+export async function exportResume(
+  accessToken: string,
+  resumeId: string,
+  format: 'txt' | 'docx' | 'pdf',
+): Promise<void> {
+  await downloadFromEndpoint(accessToken, `/api/resumes/${resumeId}/export?format=${format}`, `resume.${format}`)
+}
+
+export async function downloadAnalysisReport(
+  accessToken: string,
+  analysisId: string,
+  format: 'txt' | 'pdf',
+): Promise<void> {
+  await downloadFromEndpoint(
+    accessToken,
+    `/api/analyses/${analysisId}/report?format=${format}`,
+    `analysis-report.${format}`,
+  )
 }
 
 export type Severity = 'high' | 'medium' | 'low'
