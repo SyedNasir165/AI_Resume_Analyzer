@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import { deleteResume, fetchMe, listResumes, type ResumeSummary } from '../lib/api'
+import { analyzeResume, ApiError, deleteResume, fetchMe, listResumes, type ResumeSummary } from '../lib/api'
 
 type BackendStatus = 'loading' | 'ok' | 'error'
 type ResumesStatus = 'loading' | 'ok' | 'error'
@@ -12,6 +12,7 @@ function formatDate(iso: string): string {
 
 export default function DashboardPage() {
   const { session, signOut } = useAuth()
+  const navigate = useNavigate()
   const [backendStatus, setBackendStatus] = useState<BackendStatus>('loading')
   const [backendEmail, setBackendEmail] = useState<string | null>(null)
 
@@ -19,6 +20,8 @@ export default function DashboardPage() {
   const [resumes, setResumes] = useState<ResumeSummary[]>([])
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [analyzingId, setAnalyzingId] = useState<string | null>(null)
+  const [analyzeError, setAnalyzeError] = useState<string | null>(null)
 
   const loadResumes = useCallback(async () => {
     if (!session) return
@@ -66,6 +69,21 @@ export default function DashboardPage() {
     } finally {
       setDeletingId(null)
       setPendingDeleteId(null)
+    }
+  }
+
+  async function handleAnalyze(resumeId: string) {
+    if (!session) return
+    setAnalyzeError(null)
+    setAnalyzingId(resumeId)
+    try {
+      const result = await analyzeResume(session.access_token, resumeId)
+      navigate(`/analyses/${result.id}`)
+    } catch (err) {
+      setAnalyzeError(
+        err instanceof ApiError ? err.message : 'Could not analyze this resume. Please try again.',
+      )
+      setAnalyzingId(null)
     }
   }
 
@@ -152,23 +170,39 @@ export default function DashboardPage() {
                       </button>
                     </div>
                   ) : (
-                    <button
-                      onClick={() => setPendingDeleteId(resume.id)}
-                      className="shrink-0 rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
-                    >
-                      Delete
-                    </button>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <button
+                        onClick={() => void handleAnalyze(resume.id)}
+                        disabled={analyzingId === resume.id}
+                        className="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-700 disabled:opacity-60"
+                      >
+                        {analyzingId === resume.id ? 'Analyzing…' : 'Analyze'}
+                      </button>
+                      <button
+                        onClick={() => setPendingDeleteId(resume.id)}
+                        disabled={analyzingId === resume.id}
+                        className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-60"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   )}
                 </li>
               ))}
             </ul>
           )}
+          {analyzeError && (
+            <p role="alert" className="mt-3 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+              {analyzeError}
+            </p>
+          )}
         </div>
       </div>
 
-      <div className="mt-8 rounded-lg border border-dashed border-slate-300 bg-white p-6 text-center text-sm text-slate-500">
-        Resume analysis isn&apos;t implemented yet — that&apos;s a later phase.
-      </div>
+      <p className="mt-8 text-center text-xs text-slate-400">
+        General analysis reviews structure, language, ATS-safety, and achievement strength.
+        Job-specific analysis is coming in a later phase.
+      </p>
     </div>
   )
 }

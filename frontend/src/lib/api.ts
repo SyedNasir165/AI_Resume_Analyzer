@@ -138,3 +138,57 @@ export async function deleteResume(accessToken: string, resumeId: string): Promi
     throw new ApiError(await readErrorDetail(response))
   }
 }
+
+export type Severity = 'high' | 'medium' | 'low'
+export type AffectedArea = 'ats' | 'recruiter' | 'both'
+
+export interface CategoryScore {
+  name: string
+  score: number
+  max_score: number
+  reason: string
+}
+
+export interface Finding {
+  severity: Severity
+  location_text: string
+  problem: string
+  why_it_matters: string
+  suggestion: string
+  affects: AffectedArea
+}
+
+export interface AnalysisResult {
+  id: string
+  resume_id: string
+  analysis_type: string
+  overall_score: number
+  categories: CategoryScore[]
+  findings: Finding[]
+  created_at: string
+}
+
+export async function analyzeResume(accessToken: string, resumeId: string): Promise<AnalysisResult> {
+  const response = await fetch(`${API_BASE_URL}/api/resumes/${resumeId}/analyze`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+  })
+
+  if (!response.ok) {
+    throw new ApiError(await readErrorDetail(response))
+  }
+
+  return response.json() as Promise<AnalysisResult>
+}
+
+export async function getAnalysis(accessToken: string, analysisId: string): Promise<AnalysisResult> {
+  const response = await fetch(`${API_BASE_URL}/api/analyses/${analysisId}`, {
+    headers: authHeaders(accessToken),
+  })
+
+  if (!response.ok) {
+    throw new ApiError(await readErrorDetail(response))
+  }
+
+  return response.json() as Promise<AnalysisResult>
+}

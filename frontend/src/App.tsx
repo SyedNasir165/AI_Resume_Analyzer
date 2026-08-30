@@ -10,6 +10,7 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import DashboardPage from './pages/DashboardPage'
 import UploadResumePage from './pages/UploadResumePage'
+import AnalysisResultsPage from './pages/AnalysisResultsPage'
 
 function App() {
   return (
@@ -36,6 +37,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <UploadResumePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/analyses/:analysisId"
+              element={
+                <ProtectedRoute>
+                  <AnalysisResultsPage />
                 </ProtectedRoute>
               }
             />

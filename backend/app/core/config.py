@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     database_url: str | None = None
 
     gemini_api_key: str | None = None
-    gemini_model: str = "gemini-2.0-flash"
+    gemini_model: str = "gemini-3.6-flash"
 
     @property
     def cors_origin_list(self) -> list[str]:

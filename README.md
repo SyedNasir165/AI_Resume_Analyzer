@@ -12,15 +12,21 @@ Process rules: [`ProjectWorkflow.txt`](ProjectWorkflow.txt) · Condensed instruc
 
 ## Status
 
-**Phase 3 — Resume upload.** Complete so far:
+**Phase 4 — General resume analysis.** Complete so far:
 - **Phase 1:** Project scaffolding — frontend/backend skeletons talking to each other via a health check.
 - **Phase 2:** Authentication — Supabase-backed registration, login, logout, password reset, and a
   protected dashboard. The backend verifies Supabase-issued JWTs itself (via JWKS), independent of
   the frontend.
 - **Phase 3:** Resume upload — PDF/DOCX/TXT file upload, drag-and-drop, and paste-text, with
   extraction, validation, a review-before-confirm step, a resume list on the dashboard, and delete.
+- **Phase 4:** General resume analysis — Gemini returns structured *observations only*, and
+  application code computes a **deterministic Resume Quality Score** (0–100) across five categories
+  (ATS Parsing Safety, Experience Strength, Structure & Completeness, Consistency, Language Quality).
+  Results show the score, per-category breakdown with reasons, and specific findings. AI output is
+  strictly schema-validated and rejected if malformed; the AI never sets the score and never
+  fabricates facts.
 
-No resume analysis yet — that's a later phase.
+Job-specific analysis (matching against a job description, with the ATS Alignment Score) is a later phase.
 
 ## Stack
 
@@ -29,7 +35,7 @@ No resume analysis yet — that's a later phase.
 | Frontend      | React + TypeScript + Vite + Tailwind CSS v4 + React Router |
 | Backend       | Python + FastAPI                                    |
 | Auth + DB     | Supabase (Postgres + Supabase Auth)                 |
-| AI            | Google Gemini API (free-tier model)                 |
+| AI            | Google Gemini API (`gemini-3.6-flash`, free-tier)   |
 
 ## Folder structure
 
@@ -75,4 +81,6 @@ App runs at `http://localhost:5175`.
 Copy each `.env.example` to `.env` in `backend/` and `frontend/`, then fill in your Supabase
 project's URL, keys, and database connection string (see `.env.example` comments for where to
 find each one in the Supabase dashboard, and the IPv6/session-pooler note for `DATABASE_URL`).
-Gemini's key isn't required yet — that's a later phase.
+A free Gemini API key (from [Google AI Studio](https://aistudio.google.com/apikey)) is now
+required for the analysis feature — set `GEMINI_API_KEY` in `backend/.env`. If Gemini calls start
+returning a 404 "model no longer available," pick a current `*-flash` model for `GEMINI_MODEL`.

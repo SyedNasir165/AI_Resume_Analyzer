@@ -18,9 +18,10 @@ up while working, report it as "Potential future enhancement — not implemented
 - **Frontend:** React + TypeScript + Vite + Tailwind CSS v4 + React Router (`frontend/`)
 - **Auth + primary database:** Supabase (managed Postgres + Supabase Auth). The user creates the
   Supabase project and supplies keys via `.env` — Claude never creates third-party accounts.
-- **AI provider:** Google Gemini API, using a model on Gemini's free tier (currently defaulted to
-  `gemini-2.0-flash` via `GEMINI_MODEL` — verify in [Google AI Studio](https://aistudio.google.com)
-  before Phase 3, model availability changes).
+- **AI provider:** Google Gemini API, using a model on Gemini's free tier (defaulted to
+  `gemini-3.6-flash` via `GEMINI_MODEL` as of Phase 4, 2026-08-30 — `gemini-2.0`/`2.5-flash` were
+  retired for new keys). Model availability changes often; if calls start returning 404 "no longer
+  available," list `GET /v1beta/models?key=…` and pick a current `*-flash` model.
 
 Do not swap any of these without asking first — they were deliberately chosen over alternatives.
 
