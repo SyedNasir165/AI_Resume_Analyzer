@@ -12,7 +12,7 @@ Process rules: [`ProjectWorkflow.txt`](ProjectWorkflow.txt) · Condensed instruc
 
 ## Status
 
-**Phase 4 — General resume analysis.** Complete so far:
+**Phase 5 — Job-specific analysis.** Complete so far:
 - **Phase 1:** Project scaffolding — frontend/backend skeletons talking to each other via a health check.
 - **Phase 2:** Authentication — Supabase-backed registration, login, logout, password reset, and a
   protected dashboard. The backend verifies Supabase-issued JWTs itself (via JWKS), independent of
@@ -20,13 +20,17 @@ Process rules: [`ProjectWorkflow.txt`](ProjectWorkflow.txt) · Condensed instruc
 - **Phase 3:** Resume upload — PDF/DOCX/TXT file upload, drag-and-drop, and paste-text, with
   extraction, validation, a review-before-confirm step, a resume list on the dashboard, and delete.
 - **Phase 4:** General resume analysis — Gemini returns structured *observations only*, and
-  application code computes a **deterministic Resume Quality Score** (0–100) across five categories
-  (ATS Parsing Safety, Experience Strength, Structure & Completeness, Consistency, Language Quality).
-  Results show the score, per-category breakdown with reasons, and specific findings. AI output is
-  strictly schema-validated and rejected if malformed; the AI never sets the score and never
-  fabricates facts.
+  application code computes a **deterministic Resume Quality Score** (0–100) across five categories.
+- **Phase 5:** Job-specific analysis — paste a real job description (plus an optional target role);
+  Gemini extracts the requirements and matches resume evidence, and application code computes the
+  **deterministic ATS Alignment Score** (Keyword Coverage 25 / Requirement-Evidence Match 25 / ATS
+  Parsing Safety 20 / Experience Strength 15 / Structure 10 / Language Quality 5). Results show the
+  score, a job-fit summary (strong / partial / missing), a requirement-to-evidence table, important
+  missing keywords, the category breakdown, and findings. As with general analysis, the AI never
+  sets the score and never recommends adding a skill the resume doesn't support.
 
-Job-specific analysis (matching against a job description, with the ATS Alignment Score) is a later phase.
+Both analyses are heuristic estimates, not guarantees of ATS acceptance or interviews. Remaining MVP
+work (approval-based editor, before/after scoring, version management, export) is in later phases.
 
 ## Stack
 

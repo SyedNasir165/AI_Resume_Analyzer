@@ -176,8 +176,14 @@ export default function DashboardPage() {
                         disabled={analyzingId === resume.id}
                         className="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-700 disabled:opacity-60"
                       >
-                        {analyzingId === resume.id ? 'Analyzing…' : 'Analyze'}
+                        {analyzingId === resume.id ? 'Analyzing…' : 'General analysis'}
                       </button>
+                      <Link
+                        to={`/resumes/${resume.id}/analyze-job`}
+                        className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
+                      >
+                        Job match
+                      </Link>
                       <button
                         onClick={() => setPendingDeleteId(resume.id)}
                         disabled={analyzingId === resume.id}
@@ -201,7 +207,7 @@ export default function DashboardPage() {
 
       <p className="mt-8 text-center text-xs text-slate-400">
         General analysis reviews structure, language, ATS-safety, and achievement strength.
-        Job-specific analysis is coming in a later phase.
+        Job match compares your resume against a specific job description for an ATS Alignment Score.
       </p>
     </div>
   )

@@ -135,6 +135,75 @@ class GeneralObservations(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# 1b. AI observation schema for JOB-SPECIFIC analysis.
+# ---------------------------------------------------------------------------
+
+class RequirementKind(str, Enum):
+    required = "required"
+    preferred = "preferred"
+
+
+class RequirementCategory(str, Enum):
+    skill = "skill"
+    tool = "tool"
+    experience = "experience"
+    education = "education"
+    certification = "certification"
+    responsibility = "responsibility"
+    soft_skill = "soft_skill"
+
+
+class KeywordImportance(str, Enum):
+    high = "high"
+    medium = "medium"
+    low = "low"
+
+
+class MatchType(str, Enum):
+    exact = "exact"
+    synonym = "synonym"
+    none = "none"
+
+
+class RequirementObservation(BaseModel):
+    """One requirement extracted from the job description, matched against the resume.
+
+    evidence_strength is the model's objective read of how well the resume supports this
+    requirement (0 = none, 1 = weak/indirect, 2 = relevant but lacks detail/outcome, 3 = strong).
+    The app derives the matched/partial/missing status from this number — the model never sets a
+    status directly, so status and strength can't disagree.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+    text: str
+    kind: RequirementKind
+    category: RequirementCategory
+    evidence_text: str | None = None
+    evidence_strength: int = Field(ge=0, le=3)
+
+
+class KeywordObservation(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    term: str
+    importance: KeywordImportance
+    present_in_resume: bool
+    match_type: MatchType
+
+
+class JobObservations(BaseModel):
+    """Top-level validated shape of Gemini's response for a job-specific analysis."""
+
+    model_config = ConfigDict(extra="forbid")
+    requirements: list[RequirementObservation] = Field(default_factory=list)
+    keywords: list[KeywordObservation] = Field(default_factory=list)
+    sections: SectionsObservation
+    bullets: list[BulletObservation] = Field(default_factory=list)
+    ats_risks: list[AtsRisk] = Field(default_factory=list)
+    language: LanguageObservation
+    findings: list[AiFinding] = Field(default_factory=list)
+
+
+# ---------------------------------------------------------------------------
 # 2. API response schema — computed, deterministic result returned to the client.
 # ---------------------------------------------------------------------------
 
@@ -154,6 +223,39 @@ class Finding(BaseModel):
     affects: AffectedArea
 
 
+class MatchStatus(str, Enum):
+    matched = "matched"
+    partial = "partial"
+    missing = "missing"
+
+
+class RequirementResult(BaseModel):
+    text: str
+    kind: RequirementKind
+    category: RequirementCategory
+    match_status: MatchStatus
+    evidence_text: str | None
+    evidence_strength: int
+
+
+class KeywordResult(BaseModel):
+    term: str
+    importance: KeywordImportance
+    present: bool
+    match_type: MatchType
+
+
+class JobFitSummary(BaseModel):
+    strong: list[str]
+    partial: list[str]
+    missing: list[str]
+
+
+class JobAnalysisRequest(BaseModel):
+    target_role: str | None = Field(default=None, max_length=200)
+    job_description: str = Field(min_length=20, max_length=50_000)
+
+
 class AnalysisResult(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -164,3 +266,10 @@ class AnalysisResult(BaseModel):
     categories: list[CategoryScore]
     findings: list[Finding]
     created_at: datetime
+
+    # Present only for job-specific analyses; empty/None for general analyses.
+    target_role: str | None = None
+    requirements: list[RequirementResult] = Field(default_factory=list)
+    keywords: list[KeywordResult] = Field(default_factory=list)
+    job_fit: JobFitSummary | None = None
+    missing_keywords: list[str] = Field(default_factory=list)

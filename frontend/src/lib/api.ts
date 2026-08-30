@@ -158,6 +158,32 @@ export interface Finding {
   affects: AffectedArea
 }
 
+export type MatchStatus = 'matched' | 'partial' | 'missing'
+export type MatchType = 'exact' | 'synonym' | 'none'
+export type Importance = 'high' | 'medium' | 'low'
+
+export interface RequirementResult {
+  text: string
+  kind: 'required' | 'preferred'
+  category: string
+  match_status: MatchStatus
+  evidence_text: string | null
+  evidence_strength: number
+}
+
+export interface KeywordResult {
+  term: string
+  importance: Importance
+  present: boolean
+  match_type: MatchType
+}
+
+export interface JobFitSummary {
+  strong: string[]
+  partial: string[]
+  missing: string[]
+}
+
 export interface AnalysisResult {
   id: string
   resume_id: string
@@ -166,12 +192,36 @@ export interface AnalysisResult {
   categories: CategoryScore[]
   findings: Finding[]
   created_at: string
+  target_role: string | null
+  requirements: RequirementResult[]
+  keywords: KeywordResult[]
+  job_fit: JobFitSummary | null
+  missing_keywords: string[]
 }
 
 export async function analyzeResume(accessToken: string, resumeId: string): Promise<AnalysisResult> {
   const response = await fetch(`${API_BASE_URL}/api/resumes/${resumeId}/analyze`, {
     method: 'POST',
     headers: authHeaders(accessToken),
+  })
+
+  if (!response.ok) {
+    throw new ApiError(await readErrorDetail(response))
+  }
+
+  return response.json() as Promise<AnalysisResult>
+}
+
+export async function analyzeResumeForJob(
+  accessToken: string,
+  resumeId: string,
+  jobDescription: string,
+  targetRole?: string,
+): Promise<AnalysisResult> {
+  const response = await fetch(`${API_BASE_URL}/api/resumes/${resumeId}/analyze-job`, {
+    method: 'POST',
+    headers: { ...authHeaders(accessToken), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ job_description: jobDescription, target_role: targetRole || null }),
   })
 
   if (!response.ok) {

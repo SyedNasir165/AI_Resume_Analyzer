@@ -11,6 +11,7 @@ import ResetPasswordPage from './pages/ResetPasswordPage'
 import DashboardPage from './pages/DashboardPage'
 import UploadResumePage from './pages/UploadResumePage'
 import AnalysisResultsPage from './pages/AnalysisResultsPage'
+import JobAnalysisPage from './pages/JobAnalysisPage'
 
 function App() {
   return (
@@ -37,6 +38,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <UploadResumePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/resumes/:resumeId/analyze-job"
+              element={
+                <ProtectedRoute>
+                  <JobAnalysisPage />
                 </ProtectedRoute>
               }
             />

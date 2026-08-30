@@ -5,8 +5,8 @@ import httpx
 import pytest
 
 import app.services.gemini as gemini
-from app.schemas.analysis import GeneralObservations
-from app.services.gemini import GeminiError, analyze_resume_general
+from app.schemas.analysis import GeneralObservations, JobObservations
+from app.services.gemini import GeminiError, analyze_resume_general, analyze_resume_job
 
 VALID_OBSERVATIONS = {
     "sections": {
@@ -98,3 +98,41 @@ def test_network_error_raises(monkeypatch):
     monkeypatch.setattr(gemini.httpx, "post", _raise)
     with pytest.raises(GeminiError):
         analyze_resume_general("resume text")
+
+
+VALID_JOB_OBSERVATIONS = {
+    "requirements": [
+        {
+            "text": "3 years Python",
+            "kind": "required",
+            "category": "skill",
+            "evidence_text": "4 years Python",
+            "evidence_strength": 3,
+        }
+    ],
+    "keywords": [{"term": "Python", "importance": "high", "present_in_resume": True, "match_type": "exact"}],
+    "sections": VALID_OBSERVATIONS["sections"],
+    "bullets": [],
+    "ats_risks": [],
+    "language": {"spelling_grammar_issue_count": 0, "passive_voice_count": 0, "filler_word_count": 0},
+    "findings": [],
+}
+
+
+def test_job_valid_response_parses(monkeypatch):
+    monkeypatch.setattr(gemini, "get_settings", lambda: _fake_settings())
+    monkeypatch.setattr(
+        gemini.httpx, "post", lambda *a, **k: _gemini_response(json.dumps(VALID_JOB_OBSERVATIONS))
+    )
+    result = analyze_resume_job("resume", "job description")
+    assert isinstance(result, JobObservations)
+    assert result.requirements[0].evidence_strength == 3
+
+
+def test_job_schema_invalid_is_rejected(monkeypatch):
+    monkeypatch.setattr(gemini, "get_settings", lambda: _fake_settings())
+    # evidence_strength out of range (must be 0-3)
+    bad = {**VALID_JOB_OBSERVATIONS, "requirements": [{**VALID_JOB_OBSERVATIONS["requirements"][0], "evidence_strength": 9}]}
+    monkeypatch.setattr(gemini.httpx, "post", lambda *a, **k: _gemini_response(json.dumps(bad)))
+    with pytest.raises(GeminiError):
+        analyze_resume_job("resume", "job description")

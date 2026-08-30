@@ -10,7 +10,14 @@ from app.schemas.analysis import (
     ContactObservation,
     DateConsistencyObservation,
     GeneralObservations,
+    JobObservations,
+    KeywordImportance,
+    KeywordObservation,
     LanguageObservation,
+    MatchType,
+    RequirementCategory,
+    RequirementKind,
+    RequirementObservation,
     SectionPresence,
     SectionsObservation,
     SummaryObservation,
@@ -45,6 +52,46 @@ def _canned_observations() -> GeneralObservations:
         language=LanguageObservation(
             spelling_grammar_issue_count=0, passive_voice_count=0, filler_word_count=0
         ),
+        findings=[],
+    )
+
+
+def _canned_job_observations() -> JobObservations:
+    return JobObservations(
+        requirements=[
+            RequirementObservation(
+                text="3 years Python",
+                kind=RequirementKind.required,
+                category=RequirementCategory.skill,
+                evidence_text="4 years Python",
+                evidence_strength=3,
+            ),
+            RequirementObservation(
+                text="Kubernetes",
+                kind=RequirementKind.preferred,
+                category=RequirementCategory.tool,
+                evidence_text=None,
+                evidence_strength=0,
+            ),
+        ],
+        keywords=[
+            KeywordObservation(
+                term="Python", importance=KeywordImportance.high, present_in_resume=True, match_type=MatchType.exact
+            ),
+            KeywordObservation(
+                term="Kubernetes", importance=KeywordImportance.high, present_in_resume=False, match_type=MatchType.none
+            ),
+        ],
+        sections=SectionsObservation(
+            contact=ContactObservation(present=True, has_email=True, has_phone=True),
+            summary=SummaryObservation(present=True, quality=SummaryQuality.strong),
+            experience=SectionPresence(present=True),
+            education=SectionPresence(present=True),
+            skills=SectionPresence(present=True),
+        ),
+        bullets=[],
+        ats_risks=[],
+        language=LanguageObservation(spelling_grammar_issue_count=0, passive_voice_count=0, filler_word_count=0),
         findings=[],
     )
 
@@ -130,3 +177,74 @@ def test_score_is_stored_and_reproduced(client, monkeypatch):
     fetched = client.get(f"/api/analyses/{analysis_id}").json()
 
     assert first["overall_score"] == fetched["overall_score"]
+
+
+# --- job-specific analysis ---
+
+JOB_BODY = {"target_role": "Backend Engineer", "job_description": "We need a Python engineer with 3+ years of experience building APIs."}
+
+
+def test_job_analysis_success(client, monkeypatch):
+    monkeypatch.setattr(analyses_api, "analyze_resume_job", lambda _r, _j: _canned_job_observations())
+    _as_user(USER_A)
+    resume_id = _create_resume(client)
+
+    response = client.post(f"/api/resumes/{resume_id}/analyze-job", json=JOB_BODY)
+
+    assert response.status_code == 201
+    body = response.json()
+    assert body["analysis_type"] == "job"
+    assert body["target_role"] == "Backend Engineer"
+    assert 0 <= body["overall_score"] <= 100
+    assert len(body["categories"]) == 6
+    assert len(body["requirements"]) == 2
+    assert body["job_fit"]["strong"] == ["3 years Python"]
+    assert body["job_fit"]["missing"] == ["Kubernetes"]
+    assert "Kubernetes" in body["missing_keywords"]
+
+
+def test_job_analysis_requires_job_description(client):
+    _as_user(USER_A)
+    resume_id = _create_resume(client)
+
+    response = client.post(f"/api/resumes/{resume_id}/analyze-job", json={"job_description": "short"})
+
+    assert response.status_code == 422  # fails min_length validation
+
+
+def test_job_analysis_surfaces_ai_failure_as_502(client, monkeypatch):
+    def _boom(_r, _j):
+        raise GeminiError("rate-limited")
+
+    monkeypatch.setattr(analyses_api, "analyze_resume_job", _boom)
+    _as_user(USER_A)
+    resume_id = _create_resume(client)
+
+    response = client.post(f"/api/resumes/{resume_id}/analyze-job", json=JOB_BODY)
+
+    assert response.status_code == 502
+
+
+def test_cannot_job_analyze_another_users_resume(client, monkeypatch):
+    monkeypatch.setattr(analyses_api, "analyze_resume_job", lambda _r, _j: _canned_job_observations())
+    _as_user(USER_A)
+    resume_id = _create_resume(client)
+
+    _as_user(USER_B)
+    response = client.post(f"/api/resumes/{resume_id}/analyze-job", json=JOB_BODY)
+
+    assert response.status_code == 404
+
+
+def test_job_analysis_persists_and_reloads_details(client, monkeypatch):
+    monkeypatch.setattr(analyses_api, "analyze_resume_job", lambda _r, _j: _canned_job_observations())
+    _as_user(USER_A)
+    resume_id = _create_resume(client)
+    analysis_id = client.post(f"/api/resumes/{resume_id}/analyze-job", json=JOB_BODY).json()["id"]
+
+    fetched = client.get(f"/api/analyses/{analysis_id}").json()
+
+    assert fetched["analysis_type"] == "job"
+    assert fetched["target_role"] == "Backend Engineer"
+    assert len(fetched["requirements"]) == 2
+    assert fetched["job_fit"]["missing"] == ["Kubernetes"]
