@@ -1,5 +1,5 @@
 import { useRef, useState, type DragEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { ApiError, confirmResume, pasteResumeText, uploadResumeFile, type ResumeDetail } from '../lib/api'
 
@@ -141,6 +141,14 @@ export default function UploadResumePage() {
     <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6">
       <h1 className="text-2xl font-semibold text-slate-900">Upload your resume</h1>
       <p className="mt-1 text-sm text-slate-600">PDF, DOCX, or TXT — up to 5 MB.</p>
+      <p className="mt-2 text-xs text-slate-400">
+        We store the extracted text (not the file) so you can analyze and improve it, and it stays
+        private to your account. You can delete it any time. See{' '}
+        <Link to="/privacy" className="underline underline-offset-2 hover:text-slate-600">
+          Privacy &amp; your data
+        </Link>
+        .
+      </p>
 
       <div className="mt-6 flex gap-2 text-sm">
         <button

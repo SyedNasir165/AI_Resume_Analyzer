@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user
+from app.api.deps import enforce_ai_rate_limit, get_current_user
 from app.core.security import TokenPayload
 from app.db.session import get_db
 from app.models.analysis import Analysis, AnalysisType
@@ -69,7 +69,7 @@ def _to_result(analysis: Analysis, db: Session) -> AnalysisResult:
 @router.post("/resumes/{resume_id}/analyze", response_model=AnalysisResult, status_code=status.HTTP_201_CREATED)
 def analyze_resume(
     resume_id: uuid.UUID,
-    current_user: Annotated[TokenPayload, Depends(get_current_user)],
+    current_user: Annotated[TokenPayload, Depends(enforce_ai_rate_limit)],
     db: Annotated[Session, Depends(get_db)],
 ) -> AnalysisResult:
     resume = _get_owned_resume(db, resume_id, current_user.user_id)
@@ -105,7 +105,7 @@ def analyze_resume(
 def analyze_resume_for_job(
     resume_id: uuid.UUID,
     payload: JobAnalysisRequest,
-    current_user: Annotated[TokenPayload, Depends(get_current_user)],
+    current_user: Annotated[TokenPayload, Depends(enforce_ai_rate_limit)],
     db: Annotated[Session, Depends(get_db)],
 ) -> AnalysisResult:
     resume = _get_owned_resume(db, resume_id, current_user.user_id)
@@ -153,6 +153,19 @@ def get_analysis(
     if analysis is None or str(analysis.user_id) != current_user.user_id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Analysis not found")
     return _to_result(analysis, db)
+
+
+@router.delete("/analyses/{analysis_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_analysis(
+    analysis_id: uuid.UUID,
+    current_user: Annotated[TokenPayload, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+) -> None:
+    analysis = db.get(Analysis, analysis_id)
+    if analysis is None or str(analysis.user_id) != current_user.user_id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Analysis not found")
+    db.delete(analysis)
+    db.commit()
 
 
 @router.get("/resumes/{resume_id}/analyses", response_model=list[AnalysisResult])

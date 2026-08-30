@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from app.api.deps import get_current_user
+from app.api.deps import enforce_ai_rate_limit
 from app.core.security import TokenPayload
 from app.schemas.coach import BulletRewrite, CoachQuestions, QuestionsRequest, RewriteRequest
 from app.services.gemini import GeminiError, coach_questions, coach_rewrite
@@ -13,7 +13,7 @@ router = APIRouter(prefix="/api/coach", tags=["coach"])
 @router.post("/questions", response_model=CoachQuestions)
 def get_coach_questions(
     payload: QuestionsRequest,
-    _current_user: Annotated[TokenPayload, Depends(get_current_user)],
+    _current_user: Annotated[TokenPayload, Depends(enforce_ai_rate_limit)],
 ) -> CoachQuestions:
     try:
         return coach_questions(payload.bullet_text)
@@ -24,7 +24,7 @@ def get_coach_questions(
 @router.post("/rewrite", response_model=BulletRewrite)
 def rewrite_bullet(
     payload: RewriteRequest,
-    _current_user: Annotated[TokenPayload, Depends(get_current_user)],
+    _current_user: Annotated[TokenPayload, Depends(enforce_ai_rate_limit)],
 ) -> BulletRewrite:
     answers = [(item.question, item.answer) for item in payload.answers]
     try:

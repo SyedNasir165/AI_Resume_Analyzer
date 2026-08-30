@@ -45,6 +45,16 @@ def db_session():
         engine.dispose()
 
 
+@pytest.fixture(autouse=True)
+def _reset_rate_limiter():
+    # The AI rate limiter is a shared module-level instance; reset it before each test so counts
+    # don't accumulate across the suite and cause spurious 429s.
+    from app.api.deps import ai_rate_limiter
+
+    ai_rate_limiter.reset()
+    yield
+
+
 @pytest.fixture()
 def client(db_session):
     def override_get_db():

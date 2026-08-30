@@ -5,6 +5,7 @@ import CoachPanel from '../components/CoachPanel'
 import {
   ApiError,
   createResumeVersion,
+  deleteAnalysis,
   getAnalysis,
   getResume,
   type AnalysisResult,
@@ -233,6 +234,19 @@ export default function AnalysisResultsPage() {
     })
   }
 
+  const [deletingAnalysis, setDeletingAnalysis] = useState(false)
+
+  async function handleDeleteAnalysis() {
+    if (!session || !analysis) return
+    setDeletingAnalysis(true)
+    try {
+      await deleteAnalysis(session.access_token, analysis.id)
+      navigate('/dashboard')
+    } catch {
+      setDeletingAnalysis(false)
+    }
+  }
+
   async function saveTailoredVersion() {
     if (!session || !analysis || !resumeText) return
     setSaveError(null)
@@ -286,9 +300,18 @@ export default function AnalysisResultsPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
-      <Link to="/dashboard" className="text-sm font-medium text-slate-500 hover:text-slate-900">
-        ← Back to dashboard
-      </Link>
+      <div className="flex items-center justify-between">
+        <Link to="/dashboard" className="text-sm font-medium text-slate-500 hover:text-slate-900">
+          ← Back to dashboard
+        </Link>
+        <button
+          onClick={() => void handleDeleteAnalysis()}
+          disabled={deletingAnalysis}
+          className="text-xs font-medium text-slate-400 hover:text-red-600 disabled:opacity-60"
+        >
+          {deletingAnalysis ? 'Deleting…' : 'Delete this analysis'}
+        </button>
+      </div>
 
       <div className="mt-6 rounded-lg border border-slate-200 bg-white p-6">
         <p className="text-sm text-slate-500">

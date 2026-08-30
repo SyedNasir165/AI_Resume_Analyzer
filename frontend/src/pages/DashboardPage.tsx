@@ -1,7 +1,15 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import { analyzeResume, ApiError, deleteResume, fetchMe, listResumes, type ResumeSummary } from '../lib/api'
+import {
+  analyzeResume,
+  ApiError,
+  deleteAccount,
+  deleteResume,
+  fetchMe,
+  listResumes,
+  type ResumeSummary,
+} from '../lib/api'
 
 type BackendStatus = 'loading' | 'ok' | 'error'
 type ResumesStatus = 'loading' | 'ok' | 'error'
@@ -41,6 +49,9 @@ export default function DashboardPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [analyzingId, setAnalyzingId] = useState<string | null>(null)
   const [analyzeError, setAnalyzeError] = useState<string | null>(null)
+  const [confirmingAccountDelete, setConfirmingAccountDelete] = useState(false)
+  const [deletingAccount, setDeletingAccount] = useState(false)
+  const [accountError, setAccountError] = useState<string | null>(null)
 
   const loadResumes = useCallback(async () => {
     if (!session) return
@@ -88,6 +99,22 @@ export default function DashboardPage() {
     } finally {
       setDeletingId(null)
       setPendingDeleteId(null)
+    }
+  }
+
+  async function handleDeleteAccount() {
+    if (!session) return
+    setAccountError(null)
+    setDeletingAccount(true)
+    try {
+      await deleteAccount(session.access_token)
+      await signOut()
+      navigate('/')
+    } catch (err) {
+      setAccountError(
+        err instanceof ApiError ? err.message : 'Could not delete your account. Please try again.',
+      )
+      setDeletingAccount(false)
     }
   }
 
@@ -243,6 +270,47 @@ export default function DashboardPage() {
       <p className="mt-8 text-center text-xs text-slate-400">
         General analysis reviews structure, language, ATS-safety, and achievement strength.
         Job match compares your resume against a specific job description for an ATS Alignment Score.
+      </p>
+
+      <div className="mt-10 rounded-lg border border-red-200 bg-white p-6">
+        <h2 className="text-sm font-semibold text-red-800">Delete account</h2>
+        <p className="mt-1 text-xs text-slate-600">
+          Permanently deletes your account and all of your data — resumes, versions, and analyses.
+          This cannot be undone.
+        </p>
+        {accountError && <p className="mt-2 text-xs text-red-700">{accountError}</p>}
+        {confirmingAccountDelete ? (
+          <div className="mt-3 flex items-center gap-2">
+            <span className="text-xs text-slate-700">Are you sure? This is permanent.</span>
+            <button
+              onClick={() => void handleDeleteAccount()}
+              disabled={deletingAccount}
+              className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-60"
+            >
+              {deletingAccount ? 'Deleting…' : 'Yes, delete everything'}
+            </button>
+            <button
+              onClick={() => setConfirmingAccountDelete(false)}
+              disabled={deletingAccount}
+              className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
+            >
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setConfirmingAccountDelete(true)}
+            className="mt-3 rounded-md border border-red-300 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50"
+          >
+            Delete my account
+          </button>
+        )}
+      </div>
+
+      <p className="mt-6 text-center text-xs text-slate-400">
+        <Link to="/privacy" className="underline underline-offset-2 hover:text-slate-600">
+          Privacy &amp; your data
+        </Link>
       </p>
     </div>
   )

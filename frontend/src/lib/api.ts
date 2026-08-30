@@ -382,3 +382,25 @@ export async function getAnalysis(accessToken: string, analysisId: string): Prom
 
   return response.json() as Promise<AnalysisResult>
 }
+
+export async function deleteAnalysis(accessToken: string, analysisId: string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/analyses/${analysisId}`, {
+    method: 'DELETE',
+    headers: authHeaders(accessToken),
+  })
+
+  if (!response.ok) {
+    throw new ApiError(await readErrorDetail(response))
+  }
+}
+
+export async function deleteAccount(accessToken: string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/me`, {
+    method: 'DELETE',
+    headers: authHeaders(accessToken),
+  })
+
+  if (!response.ok) {
+    throw new ApiError(await readErrorDetail(response))
+  }
+}

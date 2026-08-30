@@ -275,3 +275,28 @@ def test_original_analysis_has_no_previous_score(client, monkeypatch):
     result = client.post(f"/api/resumes/{resume_id}/analyze").json()
 
     assert result["previous_score"] is None
+
+
+def test_delete_analysis(client, monkeypatch):
+    monkeypatch.setattr(analyses_api, "analyze_resume_general", lambda _text: _canned_observations())
+    _as_user(USER_A)
+    resume_id = _create_resume(client)
+    analysis_id = client.post(f"/api/resumes/{resume_id}/analyze").json()["id"]
+
+    delete_response = client.delete(f"/api/analyses/{analysis_id}")
+    get_response = client.get(f"/api/analyses/{analysis_id}")
+
+    assert delete_response.status_code == 204
+    assert get_response.status_code == 404
+
+
+def test_cannot_delete_another_users_analysis(client, monkeypatch):
+    monkeypatch.setattr(analyses_api, "analyze_resume_general", lambda _text: _canned_observations())
+    _as_user(USER_A)
+    resume_id = _create_resume(client)
+    analysis_id = client.post(f"/api/resumes/{resume_id}/analyze").json()["id"]
+
+    _as_user(USER_B)
+    response = client.delete(f"/api/analyses/{analysis_id}")
+
+    assert response.status_code == 404

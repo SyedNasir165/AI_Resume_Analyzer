@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     gemini_api_key: str | None = None
     gemini_model: str = "gemini-3.6-flash"
 
+    # Per-user AI request budget per rolling minute (analysis + coach endpoints).
+    ai_rate_limit_per_minute: int = 20
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]

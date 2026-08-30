@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom'
+
 export default function Footer() {
   return (
     <footer className="border-t border-slate-200 bg-white">
@@ -7,7 +9,12 @@ export default function Footer() {
           description you provide. They do not guarantee ATS acceptance, interviews, or
           employment.
         </p>
-        <p className="mt-2">&copy; {new Date().getFullYear()} AI Resume Analyzer.</p>
+        <p className="mt-2">
+          &copy; {new Date().getFullYear()} AI Resume Analyzer ·{' '}
+          <Link to="/privacy" className="underline underline-offset-2 hover:text-slate-700">
+            Privacy &amp; your data
+          </Link>
+        </p>
       </div>
     </footer>
   )

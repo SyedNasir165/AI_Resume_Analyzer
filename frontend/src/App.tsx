@@ -13,6 +13,7 @@ import UploadResumePage from './pages/UploadResumePage'
 import AnalysisResultsPage from './pages/AnalysisResultsPage'
 import JobAnalysisPage from './pages/JobAnalysisPage'
 import ExportPage from './pages/ExportPage'
+import PrivacyPage from './pages/PrivacyPage'
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
             <Route
               path="/dashboard"
               element={
