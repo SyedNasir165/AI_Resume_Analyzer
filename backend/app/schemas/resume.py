@@ -15,6 +15,8 @@ class ResumeSummary(BaseModel):
     warnings: list[str]
     created_at: datetime
     confirmed_at: datetime | None
+    parent_resume_id: UUID | None = None
+    version_label: str | None = None
 
 
 class ResumeDetail(ResumeSummary):

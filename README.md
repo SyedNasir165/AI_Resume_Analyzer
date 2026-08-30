@@ -12,7 +12,7 @@ Process rules: [`ProjectWorkflow.txt`](ProjectWorkflow.txt) · Condensed instruc
 
 ## Status
 
-**Phase 5 — Job-specific analysis.** Complete so far:
+**Phase 6 — AI Improvement Coach & tailored versions.** Complete so far:
 - **Phase 1:** Project scaffolding — frontend/backend skeletons talking to each other via a health check.
 - **Phase 2:** Authentication — Supabase-backed registration, login, logout, password reset, and a
   protected dashboard. The backend verifies Supabase-issued JWTs itself (via JWKS), independent of
@@ -28,9 +28,15 @@ Process rules: [`ProjectWorkflow.txt`](ProjectWorkflow.txt) · Condensed instruc
   score, a job-fit summary (strong / partial / missing), a requirement-to-evidence table, important
   missing keywords, the category breakdown, and findings. As with general analysis, the AI never
   sets the score and never recommends adding a skill the resume doesn't support.
+- **Phase 6:** AI Improvement Coach & tailored versions — for a weak bullet, the coach asks targeted
+  questions and rewrites it using **only** real resume facts and the user's own answers (it never
+  invents metrics), showing each claim's source (from resume / from your answer / needs
+  confirmation). The user accepts, edits, or rejects each suggestion, then saves a **new tailored
+  version** — the original is never modified. Analyzing a version shows a **before/after** score
+  against its original.
 
 Both analyses are heuristic estimates, not guarantees of ATS acceptance or interviews. Remaining MVP
-work (approval-based editor, before/after scoring, version management, export) is in later phases.
+work (final pre-export validation and export to DOCX/PDF/report) is in later phases.
 
 ## Stack
 

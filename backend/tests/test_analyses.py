@@ -248,3 +248,30 @@ def test_job_analysis_persists_and_reloads_details(client, monkeypatch):
     assert fetched["target_role"] == "Backend Engineer"
     assert len(fetched["requirements"]) == 2
     assert fetched["job_fit"]["missing"] == ["Kubernetes"]
+
+
+def test_version_analysis_reports_previous_score(client, monkeypatch):
+    monkeypatch.setattr(analyses_api, "analyze_resume_general", lambda _text: _canned_observations())
+    _as_user(USER_A)
+    original_id = _create_resume(client)
+
+    # analyze the original (the "before")
+    before = client.post(f"/api/resumes/{original_id}/analyze").json()
+
+    # create a tailored version and analyze it (the "after")
+    version_id = client.post(
+        f"/api/resumes/{original_id}/versions", json={"edited_text": "Improved resume text."}
+    ).json()["id"]
+    after = client.post(f"/api/resumes/{version_id}/analyze").json()
+
+    assert after["previous_score"] == before["overall_score"]
+
+
+def test_original_analysis_has_no_previous_score(client, monkeypatch):
+    monkeypatch.setattr(analyses_api, "analyze_resume_general", lambda _text: _canned_observations())
+    _as_user(USER_A)
+    resume_id = _create_resume(client)
+
+    result = client.post(f"/api/resumes/{resume_id}/analyze").json()
+
+    assert result["previous_score"] is None

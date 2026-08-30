@@ -10,6 +10,25 @@ function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
+// Order so each original resume is immediately followed by its tailored versions.
+function orderWithVersions(resumes: ResumeSummary[]): ResumeSummary[] {
+  const originals = resumes.filter((r) => !r.parent_resume_id)
+  const versionsByParent = new Map<string, ResumeSummary[]>()
+  for (const r of resumes) {
+    if (r.parent_resume_id) {
+      const list = versionsByParent.get(r.parent_resume_id) ?? []
+      list.push(r)
+      versionsByParent.set(r.parent_resume_id, list)
+    }
+  }
+  const ordered: ResumeSummary[] = []
+  for (const original of originals) {
+    ordered.push(original)
+    ordered.push(...(versionsByParent.get(original.id) ?? []))
+  }
+  return ordered
+}
+
 export default function DashboardPage() {
   const { session, signOut } = useAuth()
   const navigate = useNavigate()
@@ -139,15 +158,25 @@ export default function DashboardPage() {
           )}
           {resumesStatus === 'ok' && resumes.length > 0 && (
             <ul className="divide-y divide-slate-200 rounded-lg border border-slate-200 bg-white">
-              {resumes.map((resume) => (
-                <li key={resume.id} className="flex items-center justify-between gap-4 px-4 py-3">
+              {orderWithVersions(resumes).map((resume) => (
+                <li
+                  key={resume.id}
+                  className={`flex items-center justify-between gap-4 px-4 py-3 ${
+                    resume.parent_resume_id ? 'bg-slate-50 pl-8' : ''
+                  }`}
+                >
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium text-slate-900">
-                      {resume.original_filename ?? 'Pasted text'}
+                      {resume.parent_resume_id && <span className="text-slate-400">↳ </span>}
+                      {resume.version_label ?? resume.original_filename ?? 'Pasted text'}
                     </p>
                     <p className="text-xs text-slate-500">
                       {formatDate(resume.created_at)} · {resume.file_type.toUpperCase()} ·{' '}
-                      {resume.status === 'confirmed' ? 'Confirmed' : 'Pending confirmation'}
+                      {resume.parent_resume_id
+                        ? 'Tailored version'
+                        : resume.status === 'confirmed'
+                          ? 'Confirmed'
+                          : 'Pending confirmation'}
                       {resume.warnings.length > 0 && ' · has warnings'}
                     </p>
                   </div>

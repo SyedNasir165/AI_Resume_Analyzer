@@ -136,3 +136,34 @@ def test_job_schema_invalid_is_rejected(monkeypatch):
     monkeypatch.setattr(gemini.httpx, "post", lambda *a, **k: _gemini_response(json.dumps(bad)))
     with pytest.raises(GeminiError):
         analyze_resume_job("resume", "job description")
+
+
+def test_coach_questions_parses(monkeypatch):
+    from app.services.gemini import coach_questions
+
+    monkeypatch.setattr(gemini, "get_settings", lambda: _fake_settings())
+    monkeypatch.setattr(
+        gemini.httpx, "post", lambda *a, **k: _gemini_response(json.dumps({"questions": ["How many users?"]}))
+    )
+    result = coach_questions("Built a thing.")
+    assert result.questions == ["How many users?"]
+
+
+def test_coach_rewrite_parses_and_validates_source_enum(monkeypatch):
+    from app.services.gemini import coach_rewrite
+
+    monkeypatch.setattr(gemini, "get_settings", lambda: _fake_settings())
+    good = {"improved_bullet": "Better bullet.", "facts_used": [{"text": "x", "source": "resume"}]}
+    monkeypatch.setattr(gemini.httpx, "post", lambda *a, **k: _gemini_response(json.dumps(good)))
+    result = coach_rewrite("Built a thing.", [])
+    assert result.improved_bullet == "Better bullet."
+
+
+def test_coach_rewrite_rejects_bad_source(monkeypatch):
+    from app.services.gemini import coach_rewrite
+
+    monkeypatch.setattr(gemini, "get_settings", lambda: _fake_settings())
+    bad = {"improved_bullet": "Better bullet.", "facts_used": [{"text": "x", "source": "made_up"}]}
+    monkeypatch.setattr(gemini.httpx, "post", lambda *a, **k: _gemini_response(json.dumps(bad)))
+    with pytest.raises(GeminiError):
+        coach_rewrite("Built a thing.", [])

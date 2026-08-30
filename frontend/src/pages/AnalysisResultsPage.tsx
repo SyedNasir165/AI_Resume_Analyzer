@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import CoachPanel from '../components/CoachPanel'
 import {
   ApiError,
+  createResumeVersion,
   getAnalysis,
+  getResume,
   type AnalysisResult,
   type Finding,
   type RequirementResult,
@@ -36,8 +39,18 @@ function scoreColor(score: number): string {
   return 'text-red-600'
 }
 
-function FindingCard({ finding }: { finding: Finding }) {
+interface FindingCardProps {
+  finding: Finding
+  resumeText: string | null
+  acceptedText: string | null
+  onAccept: (originalText: string, improvedText: string) => void
+  onUndo: (originalText: string) => void
+}
+
+function FindingCard({ finding, resumeText, acceptedText, onAccept, onUndo }: FindingCardProps) {
   const severity = SEVERITY_STYLES[finding.severity]
+  // The coach can only apply an edit if the finding's exact text is present in the resume.
+  const coachable = Boolean(finding.location_text && resumeText && resumeText.includes(finding.location_text))
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-4">
       <div className="flex items-center justify-between gap-3">
@@ -57,6 +70,15 @@ function FindingCard({ finding }: { finding: Finding }) {
         <span className="font-medium">Suggestion: </span>
         {finding.suggestion}
       </p>
+      {coachable && (
+        <CoachPanel
+          bulletText={finding.location_text}
+          accepted={acceptedText !== null}
+          acceptedText={acceptedText}
+          onAccept={onAccept}
+          onUndo={onUndo}
+        />
+      )}
     </div>
   )
 }
@@ -156,21 +178,36 @@ function JobFitSection({ analysis }: { analysis: AnalysisResult }) {
 export default function AnalysisResultsPage() {
   const { analysisId } = useParams<{ analysisId: string }>()
   const { session } = useAuth()
+  const navigate = useNavigate()
   const [status, setStatus] = useState<LoadStatus>('loading')
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null)
   const [error, setError] = useState<string | null>(null)
+
+  const [resumeText, setResumeText] = useState<string | null>(null)
+  const [acceptedEdits, setAcceptedEdits] = useState<Record<string, string>>({})
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!session || !analysisId) return
     let cancelled = false
     setStatus('loading')
+    // Reset per-analysis working state when navigating between analyses (the component stays
+    // mounted across route param changes, so stale accepted edits / saving state must be cleared).
+    setResumeText(null)
+    setAcceptedEdits({})
+    setSaving(false)
+    setSaveError(null)
 
     getAnalysis(session.access_token, analysisId)
       .then((data) => {
-        if (!cancelled) {
-          setAnalysis(data)
-          setStatus('ok')
-        }
+        if (cancelled) return
+        setAnalysis(data)
+        setStatus('ok')
+        // Load the resume text so accepted rewrites can be substituted into a new version.
+        return getResume(session.access_token, data.resume_id).then((resume) => {
+          if (!cancelled) setResumeText(resume.extracted_text)
+        })
       })
       .catch((err) => {
         if (!cancelled) {
@@ -183,6 +220,52 @@ export default function AnalysisResultsPage() {
       cancelled = true
     }
   }, [session, analysisId])
+
+  function acceptEdit(originalText: string, improvedText: string) {
+    setAcceptedEdits((prev) => ({ ...prev, [originalText]: improvedText }))
+  }
+
+  function undoEdit(originalText: string) {
+    setAcceptedEdits((prev) => {
+      const next = { ...prev }
+      delete next[originalText]
+      return next
+    })
+  }
+
+  async function saveTailoredVersion() {
+    if (!session || !analysis || !resumeText) return
+    setSaveError(null)
+    setSaving(true)
+    try {
+      let newText = resumeText
+      for (const [original, improved] of Object.entries(acceptedEdits)) {
+        newText = newText.replace(original, improved)
+      }
+      const label = analysis.analysis_type === 'job' && analysis.target_role ? `Tailored for ${analysis.target_role}` : undefined
+      const version = await createResumeVersion(session.access_token, analysis.resume_id, newText, label)
+      // Re-analyze the new version so the user immediately sees the before/after.
+      const endpoint =
+        analysis.analysis_type === 'job'
+          ? null // job re-analysis needs the JD again; send them to run it, keep it simple
+          : `/api/resumes/${version.id}/analyze`
+      if (endpoint) {
+        const resp = await fetch(`${import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'}${endpoint}`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        })
+        if (resp.ok) {
+          const newAnalysis = (await resp.json()) as AnalysisResult
+          navigate(`/analyses/${newAnalysis.id}`)
+          return
+        }
+      }
+      navigate('/dashboard')
+    } catch (err) {
+      setSaveError(err instanceof ApiError ? err.message : 'Could not save the tailored version.')
+      setSaving(false)
+    }
+  }
 
   if (status === 'loading') {
     return <div className="mx-auto max-w-3xl px-4 py-24 text-center text-slate-500 sm:px-6">Loading analysis…</div>
@@ -218,6 +301,21 @@ export default function AnalysisResultsPage() {
           </span>
           <span className="text-xl text-slate-400">/ 100</span>
         </div>
+        {analysis.previous_score !== null && (
+          <div className="mt-3 inline-flex items-center gap-2 rounded-md bg-slate-100 px-3 py-1.5 text-sm">
+            <span className="text-slate-500">Before {analysis.previous_score}</span>
+            <span className="text-slate-400">→</span>
+            <span className="font-medium text-slate-900">After {analysis.overall_score}</span>
+            <span
+              className={`font-semibold ${
+                analysis.overall_score - analysis.previous_score >= 0 ? 'text-emerald-600' : 'text-red-600'
+              }`}
+            >
+              {analysis.overall_score - analysis.previous_score >= 0 ? '+' : ''}
+              {analysis.overall_score - analysis.previous_score}
+            </span>
+          </div>
+        )}
         <p className="mt-3 text-xs text-slate-500">
           {isJob
             ? 'This is a heuristic estimate of alignment with the provided job description per this analyzer’s model. A high score means strong alignment — not a guarantee of ATS acceptance, interviews, or employment. Always review AI-generated suggestions before using them.'
@@ -257,9 +355,38 @@ export default function AnalysisResultsPage() {
             No specific issues were flagged.
           </div>
         ) : (
-          analysis.findings.map((finding, index) => <FindingCard key={index} finding={finding} />)
+          analysis.findings.map((finding, index) => (
+            <FindingCard
+              key={index}
+              finding={finding}
+              resumeText={resumeText}
+              acceptedText={acceptedEdits[finding.location_text] ?? null}
+              onAccept={acceptEdit}
+              onUndo={undoEdit}
+            />
+          ))
         )}
       </div>
+
+      {Object.keys(acceptedEdits).length > 0 && (
+        <div className="sticky bottom-4 mt-6 flex flex-col gap-2 rounded-lg border border-slate-300 bg-white p-4 shadow-lg">
+          <p className="text-sm font-medium text-slate-900">
+            {Object.keys(acceptedEdits).length} improvement
+            {Object.keys(acceptedEdits).length > 1 ? 's' : ''} ready to apply
+          </p>
+          <p className="text-xs text-slate-500">
+            Saving creates a new tailored version — your original resume stays unchanged.
+          </p>
+          {saveError && <p className="text-xs text-red-700">{saveError}</p>}
+          <button
+            onClick={() => void saveTailoredVersion()}
+            disabled={saving}
+            className="self-start rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700 disabled:opacity-60"
+          >
+            {saving ? 'Saving…' : 'Save as new version'}
+          </button>
+        </div>
+      )}
     </div>
   )
 }

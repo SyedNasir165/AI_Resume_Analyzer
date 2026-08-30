@@ -31,6 +31,12 @@ class Resume(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(
         Uuid(as_uuid=True), ForeignKey("public.profiles.id", ondelete="CASCADE"), nullable=False, index=True
     )
+    # A tailored version points back to the resume it was derived from. The original (parent) is
+    # never modified when a version is created — the master resume stays intact.
+    parent_resume_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("public.resumes.id", ondelete="CASCADE"), nullable=True, index=True
+    )
+    version_label: Mapped[str | None] = mapped_column(String, nullable=True)
     original_filename: Mapped[str | None] = mapped_column(String, nullable=True)
     file_type: Mapped[FileType] = mapped_column(Enum(FileType, native_enum=False, length=16), nullable=False)
     extracted_text: Mapped[str] = mapped_column(Text, nullable=False)

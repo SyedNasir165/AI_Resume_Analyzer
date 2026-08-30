@@ -181,3 +181,59 @@ def test_delete_resume_removes_it(client) -> None:
 
     assert delete_response.status_code == 204
     assert get_response.status_code == 404
+
+
+# --- versioning ---
+
+
+def test_create_version_preserves_original(client) -> None:
+    _as_user(USER_A)
+    original = client.post("/api/resumes/paste", json={"text": "Original resume text."}).json()
+
+    version = client.post(
+        f"/api/resumes/{original['id']}/versions",
+        json={"edited_text": "Improved resume text.", "version_label": "Tailored for X"},
+    ).json()
+
+    reloaded_original = client.get(f"/api/resumes/{original['id']}").json()
+
+    # Original is untouched; the version is a new row pointing back to it.
+    assert reloaded_original["extracted_text"] == "Original resume text."
+    assert version["extracted_text"] == "Improved resume text."
+    assert version["id"] != original["id"]
+    assert version["parent_resume_id"] == original["id"]
+    assert version["version_label"] == "Tailored for X"
+    assert version["status"] == "confirmed"
+
+
+def test_versions_auto_number_and_list(client) -> None:
+    _as_user(USER_A)
+    original = client.post("/api/resumes/paste", json={"text": "Original."}).json()
+
+    client.post(f"/api/resumes/{original['id']}/versions", json={"edited_text": "V1 text."})
+    client.post(f"/api/resumes/{original['id']}/versions", json={"edited_text": "V2 text."})
+
+    versions = client.get(f"/api/resumes/{original['id']}/versions").json()
+
+    assert [v["version_label"] for v in versions] == ["Tailored v1", "Tailored v2"]
+
+
+def test_version_of_a_version_branches_from_root(client) -> None:
+    _as_user(USER_A)
+    original = client.post("/api/resumes/paste", json={"text": "Original."}).json()
+    v1 = client.post(f"/api/resumes/{original['id']}/versions", json={"edited_text": "V1."}).json()
+
+    # Creating a version from v1 should still parent to the original root, not chain deeper.
+    v2 = client.post(f"/api/resumes/{v1['id']}/versions", json={"edited_text": "V2."}).json()
+
+    assert v2["parent_resume_id"] == original["id"]
+
+
+def test_cannot_version_another_users_resume(client) -> None:
+    _as_user(USER_A)
+    original = client.post("/api/resumes/paste", json={"text": "User A resume."}).json()
+
+    _as_user(USER_B)
+    response = client.post(f"/api/resumes/{original['id']}/versions", json={"edited_text": "Sneaky."})
+
+    assert response.status_code == 404

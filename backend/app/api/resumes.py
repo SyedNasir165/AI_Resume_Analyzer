@@ -10,6 +10,7 @@ from app.api.deps import get_current_user
 from app.core.security import TokenPayload
 from app.db.session import get_db
 from app.models.resume import FileType, Resume, ResumeStatus
+from app.schemas.coach import CreateVersionRequest
 from app.schemas.resume import ConfirmResumeRequest, PasteTextRequest, ResumeDetail, ResumeSummary
 from app.services.extraction import ExtractionError, extract_docx, extract_pdf, extract_txt
 
@@ -148,6 +149,63 @@ def confirm_resume(
     db.commit()
     db.refresh(resume)
     return resume
+
+
+@router.post("/{resume_id}/versions", response_model=ResumeDetail, status_code=status.HTTP_201_CREATED)
+def create_resume_version(
+    resume_id: uuid.UUID,
+    payload: CreateVersionRequest,
+    current_user: Annotated[TokenPayload, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+) -> Resume:
+    """Create a tailored version derived from an existing resume.
+
+    The original (parent) resume is never modified — this always inserts a NEW row that points back
+    to it, preserving the master and all prior versions.
+    """
+    parent = _get_owned_resume(db, resume_id, current_user.user_id)
+    # Always branch from the true master, so a chain of versions doesn't deepen indefinitely.
+    root_id = parent.parent_resume_id or parent.id
+
+    edited_text = payload.edited_text.strip()
+    if not edited_text:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="A version cannot be empty.")
+
+    existing_count = db.query(Resume).filter(Resume.parent_resume_id == root_id).count()
+    label = payload.version_label.strip() if payload.version_label else f"Tailored v{existing_count + 1}"
+
+    version = Resume(
+        user_id=uuid.UUID(current_user.user_id),
+        parent_resume_id=root_id,
+        version_label=label,
+        original_filename=parent.original_filename,
+        file_type=parent.file_type,
+        extracted_text=edited_text,
+        char_count=len(edited_text),
+        warnings=[],
+        status=ResumeStatus.confirmed,
+        confirmed_at=datetime.now(timezone.utc),
+    )
+    db.add(version)
+    db.commit()
+    db.refresh(version)
+    return version
+
+
+@router.get("/{resume_id}/versions", response_model=list[ResumeSummary])
+def list_resume_versions(
+    resume_id: uuid.UUID,
+    current_user: Annotated[TokenPayload, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+) -> list[Resume]:
+    parent = _get_owned_resume(db, resume_id, current_user.user_id)
+    root_id = parent.parent_resume_id or parent.id
+    stmt = (
+        select(Resume)
+        .where(Resume.parent_resume_id == root_id)
+        .order_by(Resume.created_at.asc())
+    )
+    return list(db.scalars(stmt))
 
 
 @router.delete("/{resume_id}", status_code=status.HTTP_204_NO_CONTENT)

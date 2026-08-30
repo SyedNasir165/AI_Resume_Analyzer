@@ -57,6 +57,8 @@ export interface ResumeSummary {
   warnings: string[]
   created_at: string
   confirmed_at: string | null
+  parent_resume_id: string | null
+  version_label: string | null
 }
 
 export interface ResumeDetail extends ResumeSummary {
@@ -139,6 +141,82 @@ export async function deleteResume(accessToken: string, resumeId: string): Promi
   }
 }
 
+export async function getResume(accessToken: string, resumeId: string): Promise<ResumeDetail> {
+  const response = await fetch(`${API_BASE_URL}/api/resumes/${resumeId}`, {
+    headers: authHeaders(accessToken),
+  })
+
+  if (!response.ok) {
+    throw new ApiError(await readErrorDetail(response))
+  }
+
+  return response.json() as Promise<ResumeDetail>
+}
+
+export async function createResumeVersion(
+  accessToken: string,
+  resumeId: string,
+  editedText: string,
+  versionLabel?: string,
+): Promise<ResumeDetail> {
+  const response = await fetch(`${API_BASE_URL}/api/resumes/${resumeId}/versions`, {
+    method: 'POST',
+    headers: { ...authHeaders(accessToken), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ edited_text: editedText, version_label: versionLabel || null }),
+  })
+
+  if (!response.ok) {
+    throw new ApiError(await readErrorDetail(response))
+  }
+
+  return response.json() as Promise<ResumeDetail>
+}
+
+export type FactSource = 'resume' | 'user_answer' | 'unverified'
+
+export interface FactUsed {
+  text: string
+  source: FactSource
+}
+
+export interface BulletRewrite {
+  improved_bullet: string
+  facts_used: FactUsed[]
+}
+
+export async function getCoachQuestions(accessToken: string, bulletText: string): Promise<string[]> {
+  const response = await fetch(`${API_BASE_URL}/api/coach/questions`, {
+    method: 'POST',
+    headers: { ...authHeaders(accessToken), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ bullet_text: bulletText }),
+  })
+
+  if (!response.ok) {
+    throw new ApiError(await readErrorDetail(response))
+  }
+
+  const data = (await response.json()) as { questions: string[] }
+  return data.questions
+}
+
+export async function rewriteBullet(
+  accessToken: string,
+  bulletText: string,
+  answers: { question: string; answer: string }[],
+): Promise<BulletRewrite> {
+  const response = await fetch(`${API_BASE_URL}/api/coach/rewrite`, {
+    method: 'POST',
+    headers: { ...authHeaders(accessToken), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ bullet_text: bulletText, answers }),
+  })
+
+  if (!response.ok) {
+    throw new ApiError(await readErrorDetail(response))
+  }
+
+  return response.json() as Promise<BulletRewrite>
+}
+
 export type Severity = 'high' | 'medium' | 'low'
 export type AffectedArea = 'ats' | 'recruiter' | 'both'
 
@@ -197,6 +275,7 @@ export interface AnalysisResult {
   keywords: KeywordResult[]
   job_fit: JobFitSummary | null
   missing_keywords: string[]
+  previous_score: number | null
 }
 
 export async function analyzeResume(accessToken: string, resumeId: string): Promise<AnalysisResult> {

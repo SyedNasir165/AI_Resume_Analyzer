@@ -273,3 +273,7 @@ class AnalysisResult(BaseModel):
     keywords: list[KeywordResult] = Field(default_factory=list)
     job_fit: JobFitSummary | None = None
     missing_keywords: list[str] = Field(default_factory=list)
+
+    # When the analyzed resume is a tailored version, the most recent score of the same type on
+    # its original — for a before/after comparison. None when there is no prior analysis to compare.
+    previous_score: int | None = None

@@ -24,15 +24,34 @@ def _get_owned_resume(db: Session, resume_id: uuid.UUID, user_id: str) -> Resume
     return resume
 
 
-def _to_result(analysis: Analysis) -> AnalysisResult:
+def _analysis_type_value(analysis: Analysis) -> str:
+    return analysis.analysis_type.value if isinstance(analysis.analysis_type, AnalysisType) else analysis.analysis_type
+
+
+def _previous_score(db: Session, analysis: Analysis) -> int | None:
+    """For a tailored version, the most recent same-type score on its original resume."""
+    resume = db.get(Resume, analysis.resume_id)
+    if resume is None or resume.parent_resume_id is None:
+        return None
+    stmt = (
+        select(Analysis)
+        .where(
+            Analysis.resume_id == resume.parent_resume_id,
+            Analysis.analysis_type == analysis.analysis_type,
+        )
+        .order_by(Analysis.created_at.desc())
+    )
+    prior = db.scalars(stmt).first()
+    return prior.overall_score if prior else None
+
+
+def _to_result(analysis: Analysis, db: Session) -> AnalysisResult:
     details = analysis.job_details or {}
     return AnalysisResult.model_validate(
         {
             "id": analysis.id,
             "resume_id": analysis.resume_id,
-            "analysis_type": analysis.analysis_type.value
-            if isinstance(analysis.analysis_type, AnalysisType)
-            else analysis.analysis_type,
+            "analysis_type": _analysis_type_value(analysis),
             "overall_score": analysis.overall_score,
             "categories": analysis.categories,
             "findings": analysis.findings,
@@ -42,6 +61,7 @@ def _to_result(analysis: Analysis) -> AnalysisResult:
             "keywords": details.get("keywords", []),
             "job_fit": details.get("job_fit"),
             "missing_keywords": details.get("missing_keywords", []),
+            "previous_score": _previous_score(db, analysis),
         }
     )
 
@@ -76,7 +96,7 @@ def analyze_resume(
     db.commit()
     db.refresh(analysis)
 
-    return _to_result(analysis)
+    return _to_result(analysis, db)
 
 
 @router.post(
@@ -120,7 +140,7 @@ def analyze_resume_for_job(
     db.commit()
     db.refresh(analysis)
 
-    return _to_result(analysis)
+    return _to_result(analysis, db)
 
 
 @router.get("/analyses/{analysis_id}", response_model=AnalysisResult)
@@ -132,7 +152,7 @@ def get_analysis(
     analysis = db.get(Analysis, analysis_id)
     if analysis is None or str(analysis.user_id) != current_user.user_id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Analysis not found")
-    return _to_result(analysis)
+    return _to_result(analysis, db)
 
 
 @router.get("/resumes/{resume_id}/analyses", response_model=list[AnalysisResult])
@@ -147,4 +167,4 @@ def list_resume_analyses(
         .where(Analysis.resume_id == resume_id, Analysis.user_id == uuid.UUID(current_user.user_id))
         .order_by(Analysis.created_at.desc())
     )
-    return [_to_result(analysis) for analysis in db.scalars(stmt)]
+    return [_to_result(analysis, db) for analysis in db.scalars(stmt)]
