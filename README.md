@@ -1,117 +1,205 @@
 # AI Resume Analyzer
 
-Upload your resume, optionally add a target role and job description, and get a transparent,
-evidence-based analysis: your strengths, your gaps, your ATS alignment, and the exact resume
-lines that need work — with every suggestion you control.
+> Upload your resume, optionally add a target role and job description, and get a transparent,
+> evidence-based analysis — your strengths, your gaps, your ATS alignment, and the exact lines that
+> need work — with every suggestion you control.
 
-> Scores are a heuristic estimate based on the resume and job description you provide. They do
-> not guarantee ATS acceptance, interviews, or employment.
+A full-stack web application that gives job-seekers an **honest, explainable** read on their
+resume. Unlike tools that hand an AI a resume and print whatever number it invents, this project
+keeps the AI on a short leash: the model only ever returns **structured observations**, and the
+**score is computed by deterministic application code**. The same resume and job description always
+produce the same score, and no employer, date, metric, or skill is ever fabricated.
 
-Full product spec: [`AI_Resume_Analyzer_MVP_and_Future_Features.txt`](AI_Resume_Analyzer_MVP_and_Future_Features.txt)
-Process rules: [`ProjectWorkflow.txt`](ProjectWorkflow.txt) · Condensed instructions: [`CLAUDE.md`](CLAUDE.md)
+**Tech:** React · TypeScript · Vite · Tailwind CSS · FastAPI · Supabase (Postgres + Auth) · Google Gemini
 
-## Status
+---
 
-**Phase 10 — Professional UI & final MVP items.** Complete so far:
-- **Phase 1:** Project scaffolding — frontend/backend skeletons talking to each other via a health check.
-- **Phase 2:** Authentication — Supabase-backed registration, login, logout, password reset, and a
-  protected dashboard. The backend verifies Supabase-issued JWTs itself (via JWKS), independent of
-  the frontend.
-- **Phase 3:** Resume upload — PDF/DOCX/TXT file upload, drag-and-drop, and paste-text, with
-  extraction, validation, a review-before-confirm step, a resume list on the dashboard, and delete.
-- **Phase 4:** General resume analysis — Gemini returns structured *observations only*, and
-  application code computes a **deterministic Resume Quality Score** (0–100) across five categories.
-- **Phase 5:** Job-specific analysis — paste a real job description (plus an optional target role);
-  Gemini extracts the requirements and matches resume evidence, and application code computes the
-  **deterministic ATS Alignment Score** (Keyword Coverage 25 / Requirement-Evidence Match 25 / ATS
-  Parsing Safety 20 / Experience Strength 15 / Structure 10 / Language Quality 5). Results show the
-  score, a job-fit summary (strong / partial / missing), a requirement-to-evidence table, important
-  missing keywords, the category breakdown, and findings. As with general analysis, the AI never
-  sets the score and never recommends adding a skill the resume doesn't support.
-- **Phase 6:** AI Improvement Coach & tailored versions — for a weak bullet, the coach asks targeted
-  questions and rewrites it using **only** real resume facts and the user's own answers (it never
-  invents metrics), showing each claim's source (from resume / from your answer / needs
-  confirmation). The user accepts, edits, or rejects each suggestion, then saves a **new tailored
-  version** — the original is never modified. Analyzing a version shows a **before/after** score
-  against its original.
-- **Phase 7:** Final validation & export — before exporting, a deterministic check compares a
-  tailored version against its original to confirm contact details and dates weren't dropped, flags
-  any *new* figures to confirm, and catches duplicate bullets. The approved resume then exports to
-  **plain-text** and **DOCX** (plain, ATS-friendly, text-extractable) — exports contain only the
-  text the user has approved, nothing generated.
+## Table of contents
 
-- **Phase 8:** Privacy & security — delete any analysis, and a **delete-account** control that
-  permanently removes the user and all their data (cascades through the database). Per-user **rate
-  limiting** on the AI endpoints (analysis + coach) to protect against abuse and runaway API cost,
-  plus a **privacy notice** explaining what's stored, how the resume is analyzed, and the user's
-  controls.
-- **Phase 9:** Export completeness — resume export now includes **PDF** (alongside DOCX and
-  plain-text), and every analysis can be downloaded as a **report** (PDF or text) covering the
-  score, category breakdown, job-fit, and findings.
-- **Phase 10:** Professional UI overhaul — a cohesive design system (Inter typography, an indigo
-  brand palette, polished cards, a circular score gauge), plus the two remaining spec items: a
-  **Resume Health Check** panel (Strong / Needs improvement / Weak per category) and an explicit
-  **fact-locking** note reassuring the user that employers, titles, dates, and education are never
-  altered by the AI.
+- [Core principles](#core-principles)
+- [Features](#features)
+- [How the scoring works](#how-the-scoring-works)
+- [Tech stack](#tech-stack)
+- [Architecture](#architecture)
+- [Project structure](#project-structure)
+- [Running locally](#running-locally)
+- [Deployment](#deployment)
+- [Security & privacy](#security--privacy)
+- [Roadmap / future features](#roadmap--future-features)
+- [Disclaimer](#disclaimer)
 
-Both analyses are heuristic estimates, not guarantees of ATS acceptance or interviews. The full MVP
-flow is now in place: sign up, upload, analyze (general or job-specific), improve with the coach,
-save a tailored version, validate, export the resume (TXT/DOCX/PDF) and analysis report, and
-manage or delete your data.
+---
 
-## Stack
+## Core principles
 
-| Layer         | Choice                                              |
-|---------------|------------------------------------------------------|
-| Frontend      | React + TypeScript + Vite + Tailwind CSS v4 + React Router |
-| Backend       | Python + FastAPI                                    |
-| Auth + DB     | Supabase (Postgres + Supabase Auth)                 |
-| AI            | Google Gemini API (`gemini-3.6-flash`, free-tier)   |
+1. **Never fabricate.** The app never invents an employer, job title, date, skill, metric,
+   certification, or achievement. Missing information is surfaced as a gap to confirm — never
+   filled in by the AI.
+2. **Deterministic, explainable scoring.** The LLM never sets the score. Application code computes
+   it from validated observations, so it is reproducible and every point is explainable.
+3. **You are in control.** Suggestions are drafts. You accept, edit, or reject each one, and your
+   original resume is never overwritten.
+4. **Private by default.** Your data is yours; you can delete any part of it, or your whole account,
+   at any time.
+5. **Honest about limits.** Scores are heuristic estimates, always framed as "strong alignment per
+   this analyzer's model" — never as a guaranteed ATS pass.
 
-## Folder structure
+## Features
+
+| Area | What it does |
+|------|--------------|
+| **Authentication** | Email/password sign-up, login, logout, password reset, and protected routes. The backend verifies Supabase-issued JWTs itself via the project's JWKS endpoint. |
+| **Resume upload** | PDF, DOCX, and TXT via file picker, drag-and-drop, or paste. Extraction with validation for empty, oversized, corrupt, or unsupported files, and a review-before-confirm step. |
+| **General analysis** | A deterministic **Resume Quality Score** (0–100) across ATS Parsing Safety, Experience Strength, Structure & Completeness, Consistency, and Language Quality — with a Strong / Needs-improvement / Weak health check. |
+| **Job-specific analysis** | Paste a real job description and get the deterministic **ATS Alignment Score** (Keyword Coverage 25 / Requirement-Evidence 25 / ATS Parsing Safety 20 / Experience Strength 15 / Structure 10 / Language Quality 5), plus a requirement-to-evidence table, keyword analysis, and a job-fit summary. |
+| **Findings** | Each issue is tied to the exact resume line, with severity, why it matters, and a concrete suggestion that never invents facts. |
+| **AI Improvement Coach** | For a weak bullet, the coach asks targeted questions and rewrites it using **only** your real facts and answers — showing each claim's source (from resume / from your answer / needs confirmation). |
+| **Tailored versions** | Accepted edits create a new resume version; the original is never modified. Re-analyzing a version shows a **before → after** score. |
+| **Fact-locking** | Employers, titles, dates, and education are never altered by the AI — only bullet wording is rewritten. |
+| **Validation & export** | A pre-export check confirms nothing important was dropped and flags new figures to confirm. Export the resume as **TXT / DOCX / PDF**, and any analysis as a **PDF or text report**. |
+| **Privacy & security** | Per-user rate limiting on AI endpoints, delete-analysis and delete-account (full data cascade), and a plain-language privacy notice. |
+
+## How the scoring works
+
+```
+        Resume (+ optional Job Description)
+                     │
+                     ▼
+     Google Gemini  ──►  structured OBSERVATIONS only
+     (strict JSON schema; rejected if malformed;         (booleans, counts,
+      never returns a score, never invents facts)         classifications, evidence)
+                     │
+                     ▼
+     Deterministic scoring engine (application code)
+     • fixed category weights   • pure function of the observations
+     • same inputs → same score • every point explainable
+                     │
+                     ▼
+          Score + category breakdown + findings
+```
+
+This split is the heart of the product: the AI is used for what it is good at (reading and
+classifying text), and never for what it should not be trusted with (assigning a grade or asserting
+facts).
+
+## Tech stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React 18, TypeScript, Vite, Tailwind CSS v4, React Router |
+| Backend | Python, FastAPI, SQLAlchemy, Alembic, Pydantic |
+| Auth & database | Supabase (managed PostgreSQL + Supabase Auth, JWKS/ES256 token verification) |
+| AI | Google Gemini API (`gemini-3.6-flash`, free tier) |
+| Document processing | pdfplumber, python-docx, fpdf2 |
+| Testing | pytest (98 backend tests), ESLint, `tsc` type-checking |
+
+## Architecture
+
+- **Frontend** is a static single-page app. It talks to Supabase directly for auth, and to the
+  FastAPI backend for everything else, attaching the Supabase access token as a bearer.
+- **Backend** verifies that token on every protected request (no shared secret — it fetches
+  Supabase's public keys), enforces per-user ownership on all data, and calls Gemini server-side so
+  the API key is never exposed.
+- **Database** is Supabase Postgres with Row Level Security enabled on every table as
+  defense-in-depth, and foreign-key cascades so deleting a user removes all of their data.
+
+## Project structure
 
 ```
 AI_Resume_Analyzer/
-├── CLAUDE.md
-├── README.md
-├── frontend/        React app
-└── backend/         FastAPI app
+├── frontend/            React + TypeScript + Vite + Tailwind
+│   └── src/
+│       ├── pages/       route-level screens
+│       ├── components/  shared UI (navbar, coach panel, ui/ primitives)
+│       ├── contexts/    auth context
+│       └── lib/         API client + Supabase client
+├── backend/             FastAPI
+│   └── app/
+│       ├── api/         routers (auth/me, resumes, analyses, coach, finalize)
+│       ├── services/    Gemini client, deterministic scoring, extraction, export, validation
+│       ├── models/      SQLAlchemy models
+│       ├── schemas/     Pydantic schemas (incl. strict AI-output schemas)
+│       └── core/        config, security (JWT), rate limiting
+│   ├── alembic/         database migrations
+│   └── tests/           pytest suite
+├── DEPLOYMENT.md        step-by-step public deployment guide
+└── README.md
 ```
 
-## Getting started
+## Running locally
+
+**Prerequisites:** Node.js 20+, Python 3.10+, a free [Supabase](https://supabase.com) project, and a
+free [Google Gemini API key](https://aistudio.google.com/apikey).
 
 ### Backend
 
 ```bash
 cd backend
 python -m venv .venv
-.venv\Scripts\Activate.ps1
+.venv\Scripts\Activate.ps1        # Windows (PowerShell); use source .venv/bin/activate on macOS/Linux
 pip install -r requirements.txt
-copy .env.example .env
-alembic upgrade head
-uvicorn app.main:app --reload
+copy .env.example .env             # then fill in the values (see .env.example comments)
+alembic upgrade head               # create the database schema in your Supabase project
+uvicorn app.main:app --reload --port 8000
 ```
 
-API runs at `http://localhost:8000` (docs at `/docs`, health check at `/health`). `alembic upgrade
-head` applies the database schema (profiles, resumes) to your Supabase Postgres — needed once
-after setting `DATABASE_URL`, and again after pulling any new migration.
+The API runs at `http://localhost:8000` (interactive docs at `/docs`, health check at `/health`).
+
+> **`DATABASE_URL` tip:** use the Supabase **Session pooler** URI (Connect → Direct Connection →
+> Session pooler), not the `db.<ref>.supabase.co` host — that one is IPv6-only and won't resolve on
+> most networks. Percent-encode special characters in the password (e.g. `@` → `%40`).
 
 ### Frontend
 
 ```bash
 cd frontend
 npm install
-copy .env.example .env
+copy .env.example .env             # set VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, VITE_API_BASE_URL
 npm run dev
 ```
 
-App runs at `http://localhost:5175`.
+The app runs at `http://localhost:5175`.
 
-### Environment variables
+### Tests
 
-Copy each `.env.example` to `.env` in `backend/` and `frontend/`, then fill in your Supabase
-project's URL, keys, and database connection string (see `.env.example` comments for where to
-find each one in the Supabase dashboard, and the IPv6/session-pooler note for `DATABASE_URL`).
-A free Gemini API key (from [Google AI Studio](https://aistudio.google.com/apikey)) is now
-required for the analysis feature — set `GEMINI_API_KEY` in `backend/.env`. If Gemini calls start
-returning a 404 "model no longer available," pick a current `*-flash` model for `GEMINI_MODEL`.
+```bash
+cd backend && python -m pytest        # 98 tests
+cd frontend && npm run lint && npm run build
+```
+
+## Deployment
+
+The project is ready to deploy on free tiers — **Vercel** for the frontend, **Render** for the
+backend, with Supabase and Gemini already cloud-hosted. See **[DEPLOYMENT.md](DEPLOYMENT.md)** for a
+complete, click-by-click walkthrough.
+
+## Security & privacy
+
+- Uploaded resumes and job descriptions are treated as **untrusted input** — the AI is explicitly
+  instructed to ignore any instructions embedded inside them (prompt-injection resistant).
+- API keys and the Supabase service-role key live only in server-side environment variables and are
+  never sent to the browser.
+- Every table has Row Level Security; every endpoint checks ownership.
+- Per-user rate limiting protects the AI endpoints from abuse and runaway cost.
+- Users can delete any resume, version, or analysis, or their entire account (which cascades to all
+  of their data). Resume text is never written to application logs.
+
+## Roadmap / future features
+
+The MVP is complete. Planned extensions (not yet built), each of which builds on the verified-resume
+foundation already in place:
+
+- **Cover letter generator** — job-specific letters using only verified resume facts.
+- **Interview preparation** — role- and resume-specific technical and behavioral questions.
+- **STAR answer builder** — turn confirmed experience into Situation/Task/Action/Result stories.
+- **LinkedIn optimization** — headline and About suggestions (no automatic profile changes).
+- **Job application tracker** — company, role, stage, and follow-up reminders.
+- **Multiple-resume comparison** and **long-term analytics** (score trends, common weaknesses).
+- **OCR / image resumes**, a **resume template system**, and **job-board integrations**.
+- **Mobile apps** and **team / university / recruiter workspaces**.
+
+## Disclaimer
+
+Scores are a heuristic estimate based on the resume and job description you provide. They **do not
+guarantee** ATS acceptance, interviews, or employment. All AI-generated suggestions should be
+reviewed and verified before use.
